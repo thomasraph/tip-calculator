@@ -1,0 +1,19 @@
+{
+  "name": "Guest Check Tip Splitter",
+  "short_name": "Tip Splitter",
+  "description": "Calculate the bill, tax, tip, and per-person split for group dining.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f2f4f7",
+  "theme_color": "#0d2240",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

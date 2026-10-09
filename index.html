@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d2240">
+<link rel="manifest" href="./manifest.webmanifest">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>Guest Check Tip Splitter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: banking-app column — navy statement card with the per-person figure, action row, then grouped input panels. */
+:root{
+  --bg:#f2f4f7; --surface:#ffffff; --surface-2:#f7f9fb; --line:#dfe4ea; --line-2:#cfd6df;
+  --fg:#0c1a2b; --muted:#5a6778; --primary:#0d2240; --primary-ink:#ffffff;
+  --pos:#0c7a57; --pos-soft:#e5f3ed; --focus:#2b6cb0;
+  --hero:#0d2240; --hero-fg:#ffffff; --hero-muted:#a9b6c8; --hero-line:rgba(255,255,255,.14); --hero-total:#7fd8b3;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --shadow:0 1px 2px rgba(13,34,64,.06),0 4px 14px rgba(13,34,64,.05);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a1220; --surface:#111b2b; --surface-2:#162234; --line:#223047; --line-2:#2c3c57;
+  --fg:#e9eef5; --muted:#93a1b5; --primary:#e9eef5; --primary-ink:#0a1220;
+  --pos:#4fc99a; --pos-soft:#123328; --focus:#7fb0ef;
+  --hero:#152a4a; --hero-fg:#ffffff; --hero-muted:#a9b6c8; --hero-line:rgba(255,255,255,.14); --hero-total:#7fd8b3;
+  --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1220; --surface:#111b2b; --surface-2:#162234; --line:#223047; --line-2:#2c3c57;
+  --fg:#e9eef5; --muted:#93a1b5; --primary:#e9eef5; --primary-ink:#0a1220;
+  --pos:#4fc99a; --pos-soft:#123328; --focus:#7fb0ef;
+  --hero:#152a4a; --hero-fg:#ffffff; --hero-muted:#a9b6c8; --hero-line:rgba(255,255,255,.14); --hero-total:#7fd8b3;
+  --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.wrap{max-width:460px;margin:0 auto;padding-inline:16px;padding-block:20px 40px;display:flex;flex-direction:column;gap:14px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 2px 4px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:30px;border-radius:8px;background:var(--primary);display:grid;place-items:center;color:var(--primary-ink)}
+.mark svg{width:16px;height:16px}
+h1{margin:0;font-size:1.05rem;font-weight:600;letter-spacing:-.005em}
+.date{font-size:.78rem;color:var(--muted)}
+
+.hero{background:var(--hero);color:var(--hero-fg);border-radius:18px;padding:22px 20px 18px;display:flex;flex-direction:column;gap:16px;box-shadow:0 10px 30px rgba(13,34,64,.18)}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.eyebrow{font-size:.74rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--hero-muted)}
+.big{font-weight:600;font-size:2.75rem;line-height:1.05;letter-spacing:-.025em;margin-top:6px}
+.big small{font-size:.55em;font-weight:500;color:var(--hero-muted);margin-right:2px;vertical-align:.38em}
+.pill{font-size:.74rem;font-weight:500;padding:5px 10px;border-radius:999px;border:1px solid var(--hero-line);color:var(--hero-fg);white-space:nowrap}
+.note{font-size:.8rem;color:var(--hero-muted);margin:-6px 0 0}
+.break{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;border-top:1px solid var(--hero-line);padding-top:14px}
+.break div{min-width:0}
+.break span{display:block;font-size:.7rem;color:var(--hero-muted);margin-bottom:3px;white-space:nowrap}
+.break b{font-weight:500;font-size:.95rem;white-space:nowrap}
+.break .tot b{color:var(--hero-total);font-weight:600}
+@media (max-width:360px){.break{grid-template-columns:repeat(2,1fr)}}
+
+.actions{display:grid;grid-template-columns:1fr 1fr 48px;gap:8px}
+.btn{border:0;border-radius:11px;padding:12px 14px;font:600 .9rem var(--sans);cursor:pointer;background:var(--primary);color:var(--primary-ink);display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .08s,filter .15s}
+.btn.sec{background:var(--surface);color:var(--fg);border:1px solid var(--line-2);box-shadow:var(--shadow)}
+.btn svg{width:17px;height:17px;flex:none}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:scale(.98)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:50;max-width:calc(100% - 32px);background:var(--fg);color:var(--bg);font-size:.84rem;font-weight:500;padding:10px 16px;border-radius:999px;box-shadow:0 8px 24px rgba(13,34,64,.25);text-align:center;margin:0}
+.toast:empty{display:none}
+.tools{display:flex;gap:6px}
+.tool{width:40px;height:40px;border-radius:11px;border:1px solid var(--line-2);background:var(--surface);color:var(--fg);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow)}
+.tool:first-child{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.tool svg{width:18px;height:18px}
+.tool:active{transform:scale(.95)}
+.date{display:block;margin-top:1px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow)}
+.ptitle{margin:0;font-size:.74rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:8px}
+.lbl,label{font-size:.84rem;font-weight:500;color:var(--fg)}
+.lblrow{display:flex;justify-content:space-between;align-items:baseline}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;color:var(--muted);font:500 .86rem var(--sans);padding:8px 6px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(13,34,64,.12),0 0 0 1px var(--line-2)}
+.money{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line-2);border-radius:11px;padding:4px 14px}
+.money:focus-within{border-color:var(--focus);box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 22%,transparent)}
+.money span{font-size:1.5rem;font-weight:500;color:var(--muted)}
+.money input{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:600 1.9rem var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.015em;padding:6px 0;outline:none}
+.hint{font-size:.78rem;color:var(--muted);margin:0}
+.row{display:grid;grid-template-columns:1fr 100px;gap:8px}
+.loc{display:grid;grid-template-columns:1fr 1fr 92px;gap:8px}
+.loc select{min-width:0;text-overflow:ellipsis}
+.loc .ratebox .small{font-weight:600}
+@media (max-width:340px){.loc{grid-template-columns:1fr 1fr}.loc .ratebox{grid-column:1/-1}}
+select,.small{width:100%;border:1px solid var(--line-2);background-color:var(--surface);color:var(--fg);font:500 .94rem var(--sans);padding:11px 12px;border-radius:10px;appearance:none;-webkit-appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+.ratebox{position:relative}
+.ratebox .small{text-align:right;padding-right:28px;font-variant-numeric:tabular-nums}
+.ratebox i{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.9rem;color:var(--muted);font-style:normal;pointer-events:none}
+select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.chips{display:grid;grid-template-columns:repeat(5,1fr) 1.45fr;gap:6px}
+.chips .cust{font-weight:600}
+.custrow{display:grid;grid-template-columns:1fr 104px;gap:8px;align-items:center}
+.custrow .ratebox .small{font-size:1rem;font-weight:600}
+.custrow .seg{height:100%}
+@media (max-width:370px){.chips{grid-template-columns:repeat(3,1fr)}}
+.chips button{border:1px solid var(--line-2);background:var(--surface);color:var(--fg);font:500 .9rem var(--sans);padding:9px 0;border-radius:9px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.slide input{width:100%;accent-color:var(--primary)}
+.tipval{font-weight:600;font-size:.95rem;color:var(--pos);background:var(--pos-soft);padding:2px 9px;border-radius:999px}
+.stepper{display:grid;grid-template-columns:44px 1fr 44px;gap:8px}
+.stepper button{border:1px solid var(--line-2);background:var(--surface);color:var(--fg);border-radius:10px;font:500 1.2rem var(--sans);cursor:pointer}
+
+.linkbtn{border:0;background:none;color:var(--focus);font:600 .84rem var(--sans);cursor:pointer;padding:2px 0;display:inline-flex;align-items:center;gap:5px}
+.linkbtn svg{width:15px;height:15px}
+.favs{display:flex;flex-wrap:wrap;gap:6px}
+.favs:empty{display:none}
+.fav{border:1px solid var(--line-2);background:var(--surface);color:var(--fg);font:500 .84rem var(--sans);padding:6px 11px 6px 9px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.fav b{color:#d9a21b;font-weight:400}
+.fav[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.sublbl{font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.addrow{display:grid;grid-template-columns:1fr auto;gap:8px;position:relative}
+.sugg{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;margin:0;padding:4px;list-style:none;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:0 12px 32px rgba(13,34,64,.16);max-height:264px;overflow-y:auto}
+.sugg li{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer}
+.sugg li[aria-selected="true"]{background:var(--surface-2)}
+.sugg .av{width:30px;height:30px}
+.sugg .nm{min-width:0}
+.sugg .nm span{display:block;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sugg .nm mark{background:none;color:var(--fg);font-weight:700}
+.sugg .nm small{color:var(--muted);font-size:.74rem}
+.sugg .tag{font-size:.72rem;color:var(--muted)}
+.sugg .tag.fv{color:#d9a21b}
+.sugg .new .av{color:var(--focus)}
+.addrow input{width:100%;border:1px solid var(--line-2);background:var(--surface);color:var(--fg);font:500 .94rem var(--sans);padding:10px 12px;border-radius:10px;min-width:0}
+.addrow button{border:1px solid var(--line-2);background:var(--surface-2);color:var(--fg);font:600 .88rem var(--sans);padding:0 16px;border-radius:10px;cursor:pointer}
+.plist{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.plist:empty{display:none}
+.plist li{display:grid;grid-template-columns:32px 1fr auto auto;align-items:center;gap:10px;padding:9px 8px 9px 12px;min-height:52px}
+.plist li+li{border-top:1px solid var(--line)}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-size:.74rem;font-weight:600;color:var(--muted)}
+.pname{min-width:0}
+.pname b{display:block;font-weight:500;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pname small{color:var(--muted);font-size:.74rem}
+.pamt{font-weight:600;font-size:.95rem}
+.pact{display:flex;gap:2px}
+.ib{width:32px;height:32px;border:0;background:none;color:var(--muted);border-radius:8px;cursor:pointer;display:grid;place-items:center;text-decoration:none}
+.ib:hover{background:var(--surface-2)}
+.ib svg{width:17px;height:17px}
+.ib.on{color:#d9a21b}
+.stepper.locked{opacity:.55;pointer-events:none}
+details summary{cursor:pointer;font-weight:600;font-size:.92rem;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-3px);transition:transform .15s}
+details[open] summary::after{transform:rotate(-135deg)}
+.defs{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.defs p{margin:0;font-size:.85rem;color:var(--muted)}
+.defs .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.src{font-size:.74rem!important}
+.src a{color:var(--focus)}
+@media (prefers-reduced-motion:reduce){.btn,details summary::after{transition:none}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg></div><div><h1>Tip Splitter</h1><span class="date" id="date"></span></div></div>
+    <div class="tools">
+      <button class="tool" id="copyImg" aria-label="Copy screenshot" title="Screenshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg></button>
+      <button class="tool" id="share" aria-label="Share" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 13v5a2 2 0 002 2h10a2 2 0 002-2v-5"/></svg></button>
+      <button class="tool" id="copyTxt" aria-label="Copy as text" title="Copy as text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg></button>
+    </div>
+  </div>
+
+  <section class="hero" id="check" aria-live="polite">
+    <div class="hero-top">
+      <div>
+        <div class="eyebrow" id="perLbl">Per person</div>
+        <div class="big" id="oPer">$0.00</div>
+      </div>
+      <span class="pill" id="pill">NY · ÷1</span>
+    </div>
+    <p class="note" id="oNote" hidden></p>
+    <div class="break">
+      <div><span>Base</span><b id="oBase"></b></div>
+      <div><span id="oRate">Tax</span><b id="oTax"></b></div>
+      <div><span id="oTipPct">Tip</span><b id="oTip"></b></div>
+      <div class="tot"><span>Total</span><b id="oTotal"></b></div>
+    </div>
+  </section>
+
+
+
+  <section class="panel">
+    <h2 class="ptitle">Bill</h2>
+    <div class="field">
+      <span class="lbl">Amount on the bill</span>
+      <div class="seg" role="group" aria-label="Amount type">
+        <button id="modeSub" aria-pressed="true">Before tax</button>
+        <button id="modeTot" aria-pressed="false">Total with tax</button>
+      </div>
+    </div>
+    <div class="field">
+      <div class="money"><span>$</span><input id="amt" inputmode="decimal" autocomplete="off" value="84.50" aria-label="Bill amount" aria-describedby="amtHint"></div>
+      <p class="hint" id="amtHint">Example amount. Type your own.</p>
+    </div>
+    <div class="field">
+      <span class="lbl">Location and tax</span>
+      <div class="loc">
+        <select id="state" aria-label="State"></select>
+        <select id="city" aria-label="City"></select>
+        <div class="ratebox"><input id="rate" class="small" inputmode="decimal" aria-label="Sales tax percent"><i>%</i></div>
+      </div>
+      <p class="hint" id="rateHint">State + local rate. Edit the % to match your receipt.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="ptitle">Tip and split</h2>
+    <div class="field">
+      <div class="lblrow"><span class="lbl">Tip</span><span class="tipval" id="tipOut">20%</span></div>
+      <div class="chips" id="chips"></div>
+      <div class="custrow" id="custRow" hidden>
+        <div class="ratebox"><input id="custVal" class="small" inputmode="decimal" placeholder="0" aria-label="Custom tip"><i id="custUnit">%</i></div>
+        <div class="seg" role="group" aria-label="Custom tip unit">
+          <button id="cuPct" aria-pressed="true">%</button>
+          <button id="cuAmt" aria-pressed="false">$</button>
+        </div>
+      </div>
+      <div class="slide"><input type="range" id="tip" min="0" max="40" step="1" value="20" aria-label="Tip percent"></div>
+      <div class="seg" role="group" aria-label="Tip on">
+        <button id="onPost" aria-pressed="true">Tip with tax</button>
+        <button id="onPre" aria-pressed="false">Tip without tax</button>
+      </div>
+      <p class="hint" id="tipOnHint"></p>
+    </div>
+    <div class="field">
+      <span class="lbl">Split</span>
+      <div class="seg" role="group" aria-label="How to split">
+        <button id="spCount" aria-pressed="true">Number of people</button>
+        <button id="spNames" aria-pressed="false">Who's paying</button>
+      </div>
+    </div>
+    <div class="field" id="countField">
+      <label for="people">Split between</label>
+      <div class="stepper" id="stepper">
+        <button id="minus" aria-label="One fewer person">−</button>
+        <select id="people"></select>
+        <button id="plus" aria-label="One more person">+</button>
+      </div>
+    </div>
+    <div class="field" id="namesField" hidden>
+      <div class="lblrow"><span class="lbl" id="pplCount">You + 0 others</span>
+        <button class="linkbtn" id="addContacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M19 8v6M16 11h6"/></svg>Add from contacts</button></div>
+      <span class="sublbl" id="favLbl" hidden>Favorites</span>
+      <div class="favs" id="favs"></div>
+      <form class="addrow" id="addForm"><input id="newName" placeholder="Search or add a name" autocomplete="off" aria-label="Name" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugg"><button type="submit">Add</button><ul class="sugg" id="sugg" role="listbox" hidden></ul></form>
+      <ul class="plist" id="plist"></ul>
+      <p class="hint" id="pplHint">Start typing to find favorites and people you've split with before. Tap the star to save a favorite.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <details id="defBox">
+      <summary>Defaults</summary>
+      <div class="defs">
+        <p id="defNow">No defaults saved yet.</p>
+        <div class="two">
+          <button class="btn" id="saveDef">Save as default</button>
+          <button class="btn sec" id="clearDef">Clear</button>
+        </div>
+        <p class="src">Saves state, city, tax %, tip %, tip setting, amount type and split style in this browser. State rates: <a href="https://taxfoundation.org/data/all/state/2026-sales-tax-rates-midyear/" target="_blank" rel="noopener">Tax Foundation, mid-2026</a>. City rates are approximate combined general sales tax; local rates change and restaurant meal taxes can be higher, so check your receipt.</p>
+      </div>
+    </details>
+  </section>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+const STATES=[["AL","Alabama",4],["AK","Alaska",0],["AZ","Arizona",5.6],["AR","Arkansas",6.5],["CA","California",7.25],["CO","Colorado",2.9],["CT","Connecticut",6.35],["DE","Delaware",0],["FL","Florida",6],["GA","Georgia",4],["HI","Hawaii",4],["ID","Idaho",6],["IL","Illinois",6.25],["IN","Indiana",7],["IA","Iowa",6],["KS","Kansas",6.5],["KY","Kentucky",6],["LA","Louisiana",5],["ME","Maine",5.5],["MD","Maryland",6],["MA","Massachusetts",6.25],["MI","Michigan",6],["MN","Minnesota",6.875],["MS","Mississippi",7],["MO","Missouri",4.225],["MT","Montana",0],["NE","Nebraska",5.5],["NV","Nevada",6.85],["NH","New Hampshire",0],["NJ","New Jersey",6.625],["NM","New Mexico",4.875],["NY","New York",4],["NC","North Carolina",4.75],["ND","North Dakota",5],["OH","Ohio",5.75],["OK","Oklahoma",4.5],["OR","Oregon",0],["PA","Pennsylvania",6],["RI","Rhode Island",7],["SC","South Carolina",6],["SD","South Dakota",4.2],["TN","Tennessee",7],["TX","Texas",6.25],["UT","Utah",6.1],["VT","Vermont",6],["VA","Virginia",5.3],["WA","Washington",6.5],["WV","West Virginia",6],["WI","Wisconsin",5],["WY","Wyoming",4]];
+const CITIES={AL:[["Birmingham",10],["Huntsville",9],["Mobile",10],["Montgomery",10]],AK:[["Anchorage",0],["Fairbanks",0],["Juneau",5]],AZ:[["Mesa",8.3],["Phoenix",9.1],["Scottsdale",8.05],["Tempe",8.1],["Tucson",8.7]],AR:[["Fayetteville",9.75],["Little Rock",9]],CA:[["Fresno",8.35],["Long Beach",10.5],["Los Angeles",9.75],["Oakland",10.75],["Sacramento",8.75],["San Diego",7.75],["San Francisco",8.625],["San Jose",9.375]],CO:[["Boulder",9.05],["Colorado Springs",8.2],["Denver",9.15]],CT:[["Hartford",6.35],["New Haven",6.35]],DE:[["Wilmington",0]],FL:[["Jacksonville",7.5],["Miami",7],["Orlando",6.5],["Tallahassee",7.5],["Tampa",7.5]],GA:[["Athens",8],["Atlanta",8.9],["Augusta",8],["Savannah",7]],HI:[["Honolulu",4.5]],ID:[["Boise",6]],IL:[["Chicago",10.25],["Naperville",7.75],["Springfield",9.75]],IN:[["Fort Wayne",7],["Indianapolis",7]],IA:[["Cedar Rapids",7],["Des Moines",7]],KS:[["Topeka",9.15],["Wichita",7.5]],KY:[["Lexington",6],["Louisville",6]],LA:[["Baton Rouge",10.5],["New Orleans",10]],ME:[["Portland",5.5]],MD:[["Baltimore",6]],MA:[["Boston",6.25],["Cambridge",6.25]],MI:[["Detroit",6],["Grand Rapids",6]],MN:[["Duluth",8.875],["Minneapolis",8.025],["St. Paul",8.875]],MS:[["Gulfport",7],["Jackson",8]],MO:[["Kansas City",8.985],["Springfield",8.1],["St. Louis",9.679]],MT:[["Billings",0],["Bozeman",0]],NE:[["Lincoln",7.25],["Omaha",7]],NV:[["Las Vegas",8.375],["Reno",8.265]],NH:[["Manchester",0]],NJ:[["Jersey City",6.625],["Newark",6.625]],NM:[["Albuquerque",7.625],["Santa Fe",8.1875]],NY:[["Albany",8],["Buffalo",8.75],["New York City",8.875],["Rochester",8],["Syracuse",8]],NC:[["Asheville",7],["Charlotte",7.25],["Durham",7.5],["Raleigh",7.25]],ND:[["Bismarck",7.5],["Fargo",7.5]],OH:[["Cincinnati",7.8],["Cleveland",8],["Columbus",8]],OK:[["Oklahoma City",8.625],["Tulsa",8.517]],OR:[["Portland",0]],PA:[["Philadelphia",8],["Pittsburgh",7]],RI:[["Providence",7]],SC:[["Charleston",9],["Columbia",8],["Greenville",6]],SD:[["Rapid City",6.2],["Sioux Falls",6.2]],TN:[["Chattanooga",9.25],["Knoxville",9.25],["Memphis",9.75],["Nashville",9.25]],TX:[["Austin",8.25],["Dallas",8.25],["El Paso",8.25],["Fort Worth",8.25],["Houston",8.25],["San Antonio",8.25]],UT:[["Salt Lake City",8.45]],VT:[["Burlington",7]],VA:[["Arlington",6],["Norfolk",6],["Richmond",6],["Virginia Beach",6]],WA:[["Bellevue",10.2],["Seattle",10.35],["Spokane",9.1],["Tacoma",10.3]],WV:[["Charleston",7],["Morgantown",7]],WI:[["Madison",5.5],["Milwaukee",7.9]],WY:[["Casper",5],["Cheyenne",6],["Jackson",6]]};
+const $=id=>document.getElementById(id);
+const fmt=n=>"$"+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",");
+const st={mode:"sub",tipOn:"post"};
+const KEY="guestcheck.defaults";
+function loadDef(){try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){return null}}
+function saveDefStore(v){try{v?localStorage.setItem(KEY,JSON.stringify(v)):localStorage.removeItem(KEY);return true}catch(e){return false}}
+
+STATES.forEach(([ab,name,r])=>{const o=document.createElement("option");o.value=ab;o.textContent=name;$("state").appendChild(o)});
+for(let i=1;i<=20;i++){const o=document.createElement("option");o.value=i;o.textContent=i===1?"Just me":i+" people";$("people").appendChild(o)}
+const PRESETS=[15,18,20,22,25];
+const cust={on:false,unit:"pct"};
+PRESETS.forEach(p=>{const b=document.createElement("button");b.textContent=p+"%";b.dataset.p=p;b.onclick=()=>{setCustom(false);$("tip").value=p;calc()};$("chips").appendChild(b)});
+{const b=document.createElement("button");b.textContent="Custom";b.className="cust";b.id="custBtn";b.onclick=()=>{
+  if(!cust.on){setCustom(true);if(!$("custVal").value)$("custVal").value=cust.unit==="pct"?$("tip").value:"";}
+  $("custVal").focus();calc()};$("chips").appendChild(b)}
+function setUnitQuiet(u){cust.unit=u;$("cuPct").setAttribute("aria-pressed",u==="pct");$("cuAmt").setAttribute("aria-pressed",u==="amt");$("custUnit").textContent=u==="pct"?"%":"$"}
+function setCustom(on){cust.on=on;$("custRow").hidden=!on}
+function setUnit(u){cust.unit=u;$("cuPct").setAttribute("aria-pressed",u==="pct");$("cuAmt").setAttribute("aria-pressed",u==="amt");
+  $("custUnit").textContent=u==="pct"?"%":"$";$("custVal").value=u==="pct"?(+R.pct.toFixed(1)||""):(R.tip?R.tip.toFixed(2):"");calc()}
+$("cuPct").onclick=()=>setUnit("pct");$("cuAmt").onclick=()=>setUnit("amt");
+$("custVal").addEventListener("input",calc);
+$("tip").addEventListener("input",()=>setCustom(false));
+$("date").textContent=new Date().toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+
+function stateRate(ab){return STATES.find(s=>s[0]===ab)[2]}
+function setMode(m){st.mode=m;$("modeSub").setAttribute("aria-pressed",m==="sub");$("modeTot").setAttribute("aria-pressed",m==="tot");calc()}
+function setTipOn(t){st.tipOn=t;$("tipOnHint").textContent=t==="pre"?"Tip is based on the food and drinks only, before tax.":"Tip is based on the full bill, tax included.";$("onPre").setAttribute("aria-pressed",t==="pre");$("onPost").setAttribute("aria-pressed",t==="post");calc()}
+$("modeSub").onclick=()=>setMode("sub");$("modeTot").onclick=()=>setMode("tot");
+$("onPre").onclick=()=>setTipOn("pre");$("onPost").onclick=()=>setTipOn("post");
+function fillCities(ab,pick){const c=$("city");c.innerHTML="";
+  const o=document.createElement("option");o.value="";o.textContent="Other city";c.appendChild(o);
+  (CITIES[ab]||[]).forEach(([n,r])=>{const x=document.createElement("option");x.value=n;x.textContent=n;c.appendChild(x)});
+  c.value=pick&&(CITIES[ab]||[]).some(x=>x[0]===pick)?pick:"";}
+function cityRate(ab,city){const f=(CITIES[ab]||[]).find(x=>x[0]===city);return f?f[1]:stateRate(ab)}
+function place(){const c=$("city").value;return c?`${c}, ${$("state").value}`:$("state").value}
+$("state").onchange=()=>{fillCities($("state").value);$("rate").value=stateRate($("state").value);calc()};
+$("city").onchange=()=>{$("rate").value=cityRate($("state").value,$("city").value);calc()};
+["amt","rate","tip","people"].forEach(id=>$(id).addEventListener("input",calc));
+$("people").addEventListener("change",calc);
+$("minus").onclick=()=>{const p=$("people");p.value=Math.max(1,+p.value-1);calc()};
+$("plus").onclick=()=>{const p=$("people");p.value=Math.min(20,+p.value+1);calc()};
+$("amt").addEventListener("focus",()=>{$("amtHint").hidden=true});
+
+let R={};
+function num(v){const n=parseFloat(String(v).replace(/[^0-9.]/g,""));return isFinite(n)?n:0}
+const FKEY="guestcheck.favs";
+let favs=[];try{favs=JSON.parse(localStorage.getItem(FKEY)||"[]")}catch(e){}
+function saveFavs(){try{localStorage.setItem(FKEY,JSON.stringify(favs))}catch(e){}}
+let ppl=[];
+const RKEY="guestcheck.recents";
+let recents=[];try{recents=JSON.parse(localStorage.getItem(RKEY)||"[]")}catch(e){}
+function remember(p){recents=recents.filter(r=>keyOf(r)!==keyOf(p));recents.unshift({name:p.name,tel:p.tel});recents=recents.slice(0,60);try{localStorage.setItem(RKEY,JSON.stringify(recents))}catch(e){}}
+const keyOf=p=>(p.name||"").trim().toLowerCase()+"|"+(p.tel||"");
+const isFav=p=>favs.some(f=>keyOf(f)===keyOf(p));
+const onBill=p=>ppl.some(x=>keyOf(x)===keyOf(p));
+function addPerson(p){p={name:(p.name||"").trim(),tel:(p.tel||"").trim()};if(!p.name||onBill(p))return;if(ppl.length>=19){toast("Up to 20 people, including you");return}ppl.push(p);remember(p);syncPeople()}
+function removePerson(p){ppl=ppl.filter(x=>keyOf(x)!==keyOf(p));syncPeople()}
+function toggleFav(p){if(isFav(p))favs=favs.filter(f=>keyOf(f)!==keyOf(p));else favs.push({name:p.name,tel:p.tel});saveFavs();renderFavs();calc()}
+let splitMode="count";
+function setSplit(m){splitMode=m;$("spCount").setAttribute("aria-pressed",m==="count");$("spNames").setAttribute("aria-pressed",m==="names");
+  $("countField").hidden=m!=="count";$("namesField").hidden=m!=="names";calc()}
+$("spCount").onclick=()=>setSplit("count");$("spNames").onclick=()=>setSplit("names");
+function syncPeople(){$("pplHint").hidden=ppl.length>0;renderFavs();calc()}
+function renderFavs(){
+  const box=$("favs");box.innerHTML="";$("favLbl").hidden=!favs.length;
+  favs.forEach(f=>{const b=document.createElement("button");b.className="fav";b.setAttribute("aria-pressed",onBill(f));
+    const st=document.createElement("b");st.textContent="★";b.append(st,document.createTextNode(f.name));
+    b.onclick=()=>onBill(f)?removePerson(f):addPerson(f);box.appendChild(b)})}
+const ICON={star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+ starO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+ msg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+ x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'};
+function initials(n){return n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("")||"?"}
+function shareFor(i){return (Math.floor(R.total*100/R.n)+(i<R.extra?1:0))/100}
+function renderPeople(){
+  const ul=$("plist");ul.innerHTML="";$("pplCount").textContent=ppl.length?`You + ${ppl.length} ${ppl.length===1?"other":"others"} · ${ppl.length+1} ways`:"Add who's paying";if(splitMode!=="names"||!ppl.length)return;
+  [{name:"You",me:true},...ppl].forEach((p,i)=>{
+    const li=document.createElement("li");const amt=fmt(shareFor(i));
+    const av=document.createElement("div");av.className="av";av.textContent=p.me?"ME":initials(p.name);
+    const nm=document.createElement("div");nm.className="pname";const b=document.createElement("b");b.textContent=p.name;nm.appendChild(b);
+    if(p.tel){const sm=document.createElement("small");sm.textContent=p.tel;nm.appendChild(sm)}
+    const a=document.createElement("span");a.className="pamt";a.textContent=amt;
+    const act=document.createElement("div");act.className="pact";
+    if(!p.me){
+      if(p.tel){const t=document.createElement("a");t.className="ib";t.innerHTML=ICON.msg;t.setAttribute("aria-label","Text "+p.name);
+        t.href=`sms:${p.tel.replace(/[^+\d]/g,"")}?body=${encodeURIComponent(`Hey ${p.name.split(" ")[0]}, your share of the bill is ${amt}.`)}`;act.appendChild(t)}
+      const f=document.createElement("button");f.className="ib"+(isFav(p)?" on":"");f.innerHTML=isFav(p)?ICON.star:ICON.starO;
+      f.setAttribute("aria-label",(isFav(p)?"Remove ":"Add ")+p.name+(isFav(p)?" from favorites":" to favorites"));f.onclick=()=>toggleFav(p);act.appendChild(f);
+      const r=document.createElement("button");r.className="ib";r.innerHTML=ICON.x;r.setAttribute("aria-label","Remove "+p.name);r.onclick=()=>removePerson(p);act.appendChild(r)}
+    li.append(av,nm,a,act);ul.appendChild(li)})}
+function lev(a,b){const m=a.length,n=b.length,d=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i?(j?0:i):j));
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){const c=a[i-1]===b[j-1]?0:1;d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+c);
+    if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1)}return d[m][n]}
+function fuzzy(q,name){
+  const n=name.toLowerCase(),words=n.split(/\s+/);q=q.toLowerCase().trim();if(!q)return{score:1,hits:[]};
+  const range=(st,len)=>Array.from({length:len},(_,k)=>st+k);
+  if(n.startsWith(q))return{score:100,hits:range(0,q.length)};
+  let off=0;for(const w of words){if(w.startsWith(q))return{score:85,hits:range(off,q.length)};off+=w.length+1}
+  const sub=n.indexOf(q);if(sub>=0)return{score:65,hits:range(sub,q.length)};
+  const qs=q.replace(/\s+/g,"");let hits=[],j=0,gaps=0,last=-1;
+  for(let i=0;i<n.length&&j<qs.length;i++){if(n[i]===qs[j]){hits.push(i);if(last>=0&&i-last>1)gaps+=i-last-1;last=i;j++}}
+  if(j===qs.length)return{score:Math.max(20,50-gaps*3),hits};
+  if(q.length>=3){off=0;for(const w of words){const pre=w.slice(0,q.length);if(lev(q,pre)<=(q.length>5?2:1))return{score:30,hits:range(off,Math.min(q.length,w.length))};off+=w.length+1}}
+  return null}
+let sIdx=-1,sItems=[];
+function candidates(){const seen=new Set(),out=[];
+  [...favs.map(f=>({...f,fav:true})),...recents].forEach(p=>{const k=keyOf(p);if(seen.has(k)||onBill(p))return;seen.add(k);out.push({...p,fav:p.fav||isFav(p)})});return out}
+function renderSugg(){
+  const q=$("newName").value,ul=$("sugg");
+  let list=candidates().map(p=>({p,m:fuzzy(q,p.name)})).filter(x=>x.m).map(x=>({...x,sc:x.m.score+(x.p.fav?10:0)}))
+    .sort((a,b)=>b.sc-a.sc).slice(0,6);
+  if(!q.trim())list=list.slice(0,5);
+  sItems=list.map(x=>({type:"p",p:x.p,hits:x.m.hits}));
+  const qt=q.trim();
+  if(qt&&!list.some(x=>x.p.name.toLowerCase()===qt.toLowerCase()))sItems.push({type:"new",p:{name:qt,tel:""}});
+  ul.innerHTML="";
+  sItems.forEach((it,i)=>{const li=document.createElement("li");li.role="option";li.id="sg"+i;li.setAttribute("aria-selected",i===sIdx);
+    const av=document.createElement("div");av.className="av";const nm=document.createElement("div");nm.className="nm";const sp=document.createElement("span");
+    if(it.type==="new"){li.className="new";av.textContent="+";sp.textContent=`Add "${it.p.name}"`}
+    else{av.textContent=initials(it.p.name);const hs=new Set(it.hits);[...it.p.name].forEach((ch,k)=>{if(hs.has(k)){const m=document.createElement("mark");m.textContent=ch;sp.appendChild(m)}else sp.appendChild(document.createTextNode(ch))})}
+    nm.appendChild(sp);if(it.p.tel){const sm=document.createElement("small");sm.textContent=it.p.tel;nm.appendChild(sm)}
+    const tg=document.createElement("span");tg.className="tag"+(it.p.fav?" fv":"");tg.textContent=it.type==="new"?"New":it.p.fav?"★ Favorite":"Recent";
+    li.append(av,nm,tg);li.addEventListener("pointerdown",e=>{e.preventDefault();pick(i)});ul.appendChild(li)});
+  const open=sItems.length>0&&document.activeElement===$("newName");ul.hidden=!open;$("newName").setAttribute("aria-expanded",open);
+  $("newName").setAttribute("aria-activedescendant",sIdx>=0?"sg"+sIdx:"")}
+function pick(i){const it=sItems[i];if(!it)return;addPerson(it.p);$("newName").value="";sIdx=-1;renderSugg()}
+$("newName").addEventListener("input",()=>{sIdx=$("newName").value.trim()?0:-1;renderSugg()});
+$("newName").addEventListener("focus",renderSugg);
+$("newName").addEventListener("blur",()=>{$("sugg").hidden=true;$("newName").setAttribute("aria-expanded",false)});
+$("newName").addEventListener("keydown",e=>{
+  if(e.key==="ArrowDown"){e.preventDefault();sIdx=Math.min(sItems.length-1,sIdx+1);renderSugg()}
+  else if(e.key==="ArrowUp"){e.preventDefault();sIdx=Math.max(0,sIdx-1);renderSugg()}
+  else if(e.key==="Escape"){$("sugg").hidden=true}});
+$("addForm").addEventListener("submit",e=>{e.preventDefault();
+  if(sIdx>=0&&sItems[sIdx])return pick(sIdx);
+  const v=$("newName").value;if(v.trim()){addPerson({name:v});$("newName").value="";renderSugg()}});
+$("addContacts").onclick=async()=>{
+  if(!("contacts" in navigator&&"select" in navigator.contacts)){toast("Contacts open when this is installed as an app on Android. Type names for now.");$("newName").focus();return}
+  try{const list=await navigator.contacts.select(["name","tel"],{multiple:true});
+    list.forEach(c=>addPerson({name:(c.name&&c.name[0])||(c.tel&&c.tel[0])||"",tel:(c.tel&&c.tel[0])||""}))}
+  catch(e){toast("Couldn't open contacts. Type names instead.")}};
+
+function calc(){
+  const amt=num($("amt").value), rate=num($("rate").value)/100, n=splitMode==="names"?ppl.length+1:+$("people").value;
+  let base,tax;
+  if(st.mode==="sub"){base=amt;tax=Math.round(base*rate*100)/100}
+  else{base=Math.round(amt/(1+rate)*100)/100;tax=Math.round((amt-base)*100)/100}
+  const tipBase=st.tipOn==="pre"?base:base+tax;
+  let pct,tip;
+  if(cust.on&&cust.unit==="amt"){tip=Math.round(num($("custVal").value)*100)/100;pct=tipBase?tip/tipBase*100:0}
+  else{pct=cust.on?num($("custVal").value):+$("tip").value;tip=Math.round(tipBase*pct)/100}
+  if(cust.on)$("tip").value=Math.min(40,Math.round(pct));
+  const pl=+pct.toFixed(1);
+  const total=Math.round((base+tax+tip)*100)/100;
+  const cents=Math.round(total*100), each=Math.floor(cents/n), extra=cents-each*n;
+  R={amt,base,tax,tip,total,pct:pl,n,rate:num($("rate").value),ab:place(),each:each/100,extra};
+  $("tipOut").textContent=cust.on&&cust.unit==="amt"?`${fmt(tip)} · ${pl}%`:pl+"%";
+  document.querySelectorAll("#chips button").forEach(b=>b.setAttribute("aria-pressed",b.id==="custBtn"?cust.on:(!cust.on&&+b.dataset.p===pl)));
+  $("pill").textContent=`${R.ab} · ${n===1?"1 person":n+" people"}`;
+  $("oBase").textContent=fmt(base);$("oTax").textContent=fmt(tax);$("oTip").textContent=fmt(tip);$("oTotal").textContent=fmt(total);
+  $("oRate").textContent=`Tax ${R.rate}%`;$("oTipPct").textContent=`Tip ${pl}%`;
+  $("perLbl").textContent=n===1?"You pay":"Per person";
+  {const v=fmt(extra?(each+1)/100:each/100).slice(1);$("oPer").innerHTML="<small>$</small>"+v;}
+  $("oNote").hidden=!extra;
+  renderPeople();
+  $("oNote").textContent=extra?`${extra} pay ${fmt((each+1)/100)}, ${n-extra} pay ${fmt(each/100)} so the cents add up.`:"";
+}
+
+function applyDefaults(){
+  const d=loadDef();
+  if(d){$("state").value=d.state;fillCities(d.state,d.city);$("rate").value=d.rate;if(PRESETS.includes(+d.tip)){setCustom(false);$("tip").value=d.tip}else{setCustom(true);setUnitQuiet("pct");$("custVal").value=d.tip}st.tipOn=d.tipOn||"post";st.mode=d.mode||"sub";splitMode=d.split||"count";
+    $("defNow").textContent=`${d.city?d.city+", ":""}${STATES.find(s=>s[0]===d.state)[1]}, ${d.rate}% tax, ${d.tip}% tip ${d.tipOn==="pre"?"without":"with"} tax, amount entered as ${d.mode==="tot"?"total with tax":"before tax"}.`}
+  else{splitMode="count";st.mode="sub";st.tipOn="post";$("state").value="NY";fillCities("NY","New York City");$("rate").value=cityRate("NY","New York City");setCustom(false);$("tip").value=20;$("defNow").textContent="No defaults saved yet."}
+  setTipOn(st.tipOn);setMode(st.mode);setSplit(splitMode);
+}
+$("saveDef").onclick=()=>{const ok=saveDefStore({state:$("state").value,city:$("city").value,rate:num($("rate").value),tip:R.pct,tipOn:st.tipOn,mode:st.mode,split:splitMode});
+  applyDefaults();toast(ok?"Defaults saved":"This browser blocked saving, so defaults won't stick here.")};
+$("clearDef").onclick=()=>{saveDefStore(null);applyDefaults();toast("Defaults cleared")};
+
+let tt;function toast(m){$("toast").textContent=m;clearTimeout(tt);tt=setTimeout(()=>$("toast").textContent="",3500)}
+
+function summary(){
+  const lines=[`Bill split (${R.ab})`,`Base: ${fmt(R.base)}`,`Tax ${R.rate}%: ${fmt(R.tax)}`,`Tip ${R.pct}%: ${fmt(R.tip)}`,`Total: ${fmt(R.total)}`];
+  if(splitMode==="names"&&ppl.length){lines.push("");[{name:"Me"},...ppl].forEach((p,i)=>lines.push(`${p.name}: ${fmt(shareFor(i))}`))}
+  else if(R.n>1)lines.push(R.extra?`Split ${R.n} ways: ${R.extra} × ${fmt(R.each+.01)}, ${R.n-R.extra} × ${fmt(R.each)}`:`Split ${R.n} ways: ${fmt(R.each)} each`);
+  return lines.join("\n");
+}
+
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+function drawPNG(){
+  return new Promise(res=>{
+    const s=3,W=380,PL=splitMode==="names"&&ppl.length?ppl.length+1:0,H=(R.extra?318:296)+(PL?PL*24+30:0);
+    const c=document.createElement("canvas");c.width=W*s;c.height=H*s;const g=c.getContext("2d");g.scale(s,s);
+    const mono='"IBM Plex Sans", system-ui, sans-serif', sans=mono;
+    g.fillStyle="#f2f4f7";g.fillRect(0,0,W,H);
+    rr(g,12,12,W-24,H-24,20);g.fillStyle="#0d2240";g.fill();
+    const L=32,Rx=W-32;
+    g.fillStyle="#a9b6c8";g.font=`500 11px ${sans}`;g.fillText((R.n===1?"YOU PAY":"PER PERSON"),L,48);
+    g.textAlign="right";g.fillText(new Date().toLocaleDateString(),Rx,48);g.textAlign="left";
+    g.fillStyle="#f5f6f9";g.font=`600 46px ${mono}`;g.fillText(fmt(R.extra?R.each+.01:R.each),L,100);
+    g.fillStyle="#a9b6c8";g.font=`500 12px ${mono}`;g.fillText(`${R.ab} · ${R.n===1?"1 person":R.n+" people"}`,L,124);
+    let y=124;
+    if(R.extra){y+=20;g.font=`400 11px ${sans}`;g.fillText(`${R.extra} pay ${fmt(R.each+.01)}, ${R.n-R.extra} pay ${fmt(R.each)}`,L,y)}
+    y+=22;g.fillStyle="rgba(255,255,255,.12)";g.fillRect(L,y,Rx-L,1);y+=28;
+    [["Base",fmt(R.base)],[`Tax ${R.rate}%`,fmt(R.tax)],[`Tip ${R.pct}%`,fmt(R.tip)]].forEach(([a,b])=>{
+      g.fillStyle="#a9b6c8";g.font=`400 13px ${sans}`;g.fillText(a,L,y);
+      g.fillStyle="#f5f6f9";g.font=`500 13px ${mono}`;g.textAlign="right";g.fillText(b,Rx,y);g.textAlign="left";y+=24});
+    y+=4;g.fillStyle="rgba(255,255,255,.12)";g.fillRect(L,y-14,Rx-L,1);y+=6;
+    g.fillStyle="#f5f6f9";g.font=`600 15px ${sans}`;g.fillText("Total",L,y);
+    g.fillStyle="#7fd8b3";g.font=`600 15px ${mono}`;g.textAlign="right";g.fillText(fmt(R.total),Rx,y);g.textAlign="left";
+    if(PL){y+=20;g.fillStyle="rgba(255,255,255,.12)";g.fillRect(L,y,Rx-L,1);y+=26;
+      [{name:"Me"},...ppl].forEach((p,i)=>{g.fillStyle="#a9b6c8";g.font=`400 13px ${sans}`;g.fillText(p.name.length>26?p.name.slice(0,25)+"…":p.name,L,y);
+        g.fillStyle="#f5f6f9";g.font=`500 13px ${mono}`;g.textAlign="right";g.fillText(fmt(shareFor(i)),Rx,y);g.textAlign="left";y+=24})}
+    c.toBlob(res,"image/png");
+  });
+}
+
+let downloads=null;
+(async()=>{try{downloads=await window.claude?.use?.("downloads")}catch(e){}})();
+async function savePNG(){
+  if(!downloads)return false;
+  try{await downloads.save({filename:`bill-split-${R.ab.replace(/[^A-Za-z]+/g,"-")}-${R.total.toFixed(2)}.png`,data:await drawPNG()});toast("Screenshot ready");return true}
+  catch(e){if(e&&e.code==="declined"){toast("Cancelled");return true}return false}
+}
+async function copyText(){
+  try{await navigator.clipboard.writeText(summary());toast("Copied as text");return true}
+  catch(e){toast("Copy was blocked here.");return false}
+}
+$("copyImg").onclick=async()=>{
+  try{
+    if(!window.ClipboardItem)throw 0;
+    await navigator.clipboard.write([new ClipboardItem({"image/png":drawPNG()})]);
+    toast("Screenshot copied. Paste it anywhere.");
+  }catch(e){ if(!(await savePNG())){await copyText()} }
+};
+$("share").onclick=async()=>{
+  try{
+    const blob=await drawPNG(), file=new File([blob],"bill-split.png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:summary()});return}
+    if(navigator.share){await navigator.share({text:summary()});return}
+    throw 0;
+  }catch(e){ if(e&&e.name==="AbortError")return; if(!(await savePNG()))await copyText() }
+};
+$("copyTxt").onclick=copyText;
+
+applyDefaults();renderFavs();calc();
+</script>
+
+</body>
+</html>
