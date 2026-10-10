@@ -62,6 +62,3 @@ The bill amount now starts at 0.00 and fills from the right like a card terminal
 - **Tip explanation:** a line under Tip with tax / Tip without tax says what the selected option means, for example "Tip is based on the full bill, tax included."
 - **Person rows:** reduced to name, amount and a ⋯ menu, so long names no longer get cut off.
 - **Location label:** on the summary card, a long label like "New York City, NY · 1 person" now moves above the big number instead of overlapping it.
-
-## Tried and reverted
-The summary card was briefly a bar pinned to the bottom of the screen, then put back on top. The bar showed per person and total, and expanded to show base, tax and tip, and it held up with 20 people and a $12,345.67 bill. You preferred the card on top, with only the covering details moved down to the split area.
