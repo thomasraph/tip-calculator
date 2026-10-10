@@ -1,6 +1,7 @@
 # Release Notes
 
 ## Version: 1.0.1
+### Date: October 9, 2026
 
 Today the app learned to handle real group dinners: one person can pay for others, each payer can be texted their exact amount, and discounts come off before tax. Bill entry also got faster, with the amount starting at 0.00 and the decimal filling in as you type.
 
