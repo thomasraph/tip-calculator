@@ -1,4 +1,16 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d2240">
+<meta name="description" content="Calculate the bill, tax, tip, and per-person split for group dining.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
 <title>Guest Check Tip Splitter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +51,7 @@ h1{margin:0;font-size:1.05rem;font-weight:600;letter-spacing:-.005em}
 .hero{background:var(--hero);color:var(--hero-fg);border-radius:18px;padding:22px 20px 18px;display:flex;flex-direction:column;gap:16px;box-shadow:0 10px 30px rgba(13,34,64,.18)}
 .hero-top{display:flex;flex-wrap:wrap-reverse;justify-content:space-between;align-items:flex-start;gap:10px}
 .eyebrow{font-size:.74rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--hero-muted)}
-.big{font-weight:600;font-size:2.75rem;line-height:1.05;letter-spacing:-.025em;margin-top:6px}
+.big{font-weight:600;font-size:clamp(1.9rem,10vw,2.75rem);line-height:1.05;letter-spacing:-.025em;margin-top:6px}
 .big small{font-size:.55em;font-weight:500;color:var(--hero-muted);margin-right:2px;vertical-align:.38em}
 .pill{font-size:.74rem;font-weight:500;padding:5px 10px;border-radius:999px;border:1px solid var(--hero-line);color:var(--hero-fg);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .note{font-size:.8rem;color:var(--hero-muted);margin:-6px 0 0}
@@ -49,6 +61,7 @@ h1{margin:0;font-size:1.05rem;font-weight:600;letter-spacing:-.005em}
 .break b{font-weight:500;font-size:.95rem;white-space:nowrap}
 .break .tot b{color:var(--hero-total);font-weight:600}
 @media (max-width:360px){.break{grid-template-columns:repeat(2,1fr)}}
+.break.wide{grid-template-columns:repeat(2,1fr);row-gap:12px}
 
 .actions{display:grid;grid-template-columns:1fr 1fr 48px;gap:8px}
 .btn{border:0;border-radius:11px;padding:12px 14px;font:600 .9rem var(--sans);cursor:pointer;background:var(--primary);color:var(--primary-ink);display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .08s,filter .15s}
@@ -168,6 +181,46 @@ details[open] summary::after{transform:rotate(-135deg)}
 .defs{display:flex;flex-direction:column;gap:12px;margin-top:14px}
 .defs p{margin:0;font-size:.85rem;color:var(--muted)}
 .defs .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hcount{font-weight:500;color:var(--muted);font-size:.8rem;margin-left:4px}
+.hfilters{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hfilters select{min-width:0}
+.hwho{position:relative;min-width:0}
+.hwho input{width:100%;border:1px solid var(--line-2);background:var(--surface);color:var(--fg);font:500 .94rem var(--sans);padding:11px 34px 11px 12px;border-radius:10px;min-width:0}
+.hwho input:focus{outline:2px solid var(--focus);outline-offset:1px}
+.hwho-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;background:none;cursor:pointer;color:var(--muted);display:grid;place-items:center;font:500 1.1rem var(--sans)}
+.hwho-btn.caret::before{content:"";width:5px;height:5px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-2px)}
+.hwho .sugg{top:calc(100% + 4px);right:auto;width:calc(200% + 8px)}
+.hsumrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hsumrow .hsum{flex:1;min-width:0}
+#hMore{width:100%}
+.hpick{width:100%;border:1px solid var(--line-2);background:var(--surface);color:var(--fg);font:500 .94rem var(--sans);padding:10px 12px;border-radius:10px}
+.defs p.hsum{color:var(--fg);font-weight:500}
+.hlist{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.hlist:empty{display:none}
+.hlist>li+li{border-top:1px solid var(--line)}
+.hrow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;padding:11px 12px;cursor:pointer}
+.hrow:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.hrow .hd{font-size:.76rem;color:var(--muted)}
+.hrow .ht{font-weight:600;font-size:.95rem;text-align:right}
+.hrow .hp{font-size:.88rem;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .hx{font-size:.76rem;color:var(--muted);text-align:right;white-space:nowrap}
+.hrow .hme{grid-column:1/-1;font-size:.8rem;color:var(--pos);font-weight:600}
+.hdet{padding:2px 12px 12px;display:grid;gap:5px;font-size:.84rem;background:var(--surface-2)}
+.hdet .r{display:flex;justify-content:space-between;gap:12px}
+.hdet .r span{color:var(--muted)}
+.hdet .r.sep{border-top:1px solid var(--line);padding-top:6px;margin-top:2px}
+.hitem{display:flex;align-items:stretch}
+.hitem .hrow{flex:1;min-width:0}
+.htrash{flex:none;width:44px;border:0;background:none;color:var(--muted);cursor:pointer;display:grid;place-items:center}
+.htrash svg{width:18px;height:18px}
+.htrash:hover{color:#c0392b}
+.htrash:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.hundo{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;font-size:.86rem;color:var(--muted);background:var(--surface-2)}
+.hundo button{border:0;background:none;color:var(--focus);font:600 .86rem var(--sans);cursor:pointer;padding:0}
+.hacts{display:flex;gap:18px;margin-top:6px}
+.hdet .hsh{color:var(--focus)!important}
+.hdet .hdel{justify-self:start;margin-top:6px;border:0;background:none;color:#c0392b;font:600 .8rem var(--sans);cursor:pointer;padding:0}
+.hempty{padding:14px 12px;color:var(--muted);font-size:.85rem}
 .src{font-size:.74rem!important}
 .src a{color:var(--focus)}
 @media (prefers-reduced-motion:reduce){.btn,details summary::after{transition:none}}
@@ -298,6 +351,36 @@ details[open] summary::after{transform:rotate(-135deg)}
 
 
   <section class="panel">
+    <details id="histBox">
+      <summary><span>History <small class="hcount" id="hCount"></small></span></summary>
+      <div class="defs hist">
+        <div class="hfilters">
+          <div class="hwho">
+            <input id="hWhoIn" placeholder="All people" autocomplete="off" aria-label="Filter by person" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="hWhoList">
+            <button type="button" class="hwho-btn" id="hWhoBtn" aria-label="Show people"></button>
+            <ul class="sugg" id="hWhoList" role="listbox" hidden></ul>
+          </div>
+          <select id="hDate" aria-label="Filter by date">
+            <option value="all">Any time</option>
+            <option value="today">Today</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="month">This month</option>
+            <option value="pick">Pick a date…</option>
+          </select>
+        </div>
+        <input type="date" id="hPick" class="hpick" hidden aria-label="Pick a date">
+        <div class="hsumrow"><p class="hsum" id="hSum"></p>
+          <button type="button" class="tool sm" id="hShare" aria-label="Share history" title="Share history" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 13v5a2 2 0 002 2h10a2 2 0 002-2v-5"/></svg></button></div>
+        <ul class="hlist" id="hList"></ul>
+        <button type="button" class="btn sec" id="hMore" hidden></button>
+        <button class="linkbtn" id="clearHist" type="button">Clear history</button>
+        <p class="src">Keeps your last 20 bills in this browser. Bills save automatically a few seconds after you stop changing them. Clearing the amount back to 0.00 starts a new bill.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel">
     <details id="defBox">
       <summary>Defaults</summary>
       <div class="defs">
@@ -311,6 +394,7 @@ details[open] summary::after{transform:rotate(-135deg)}
     </details>
   </section>
 
+  <p class="toast" id="toast" role="status" aria-live="polite"></p>
 </div>
 
 <script>
@@ -416,6 +500,7 @@ const ICON={star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5l
  starO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
  msg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
  more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+ trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>',
  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
  cover:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><circle cx="17" cy="9" r="2.4"/><path d="M17.5 14.2c2 .4 3.3 1.9 3.6 4.3"/></svg>'};
@@ -551,22 +636,24 @@ function setDTip(t){disc.tipOn=t;$("dOrig").setAttribute("aria-pressed",t==="ori
 $("dOrig").onclick=()=>setDTip("orig");$("dDisc").onclick=()=>setDTip("disc");
 function calc(){
   const amt=num($("amt").value), rate=num($("rate").value)/100, n=splitMode==="names"?ppl.length+1:+$("people").value;
-  let base,tax;
-  if(st.mode==="sub"){base=amt;tax=Math.round(base*rate*100)/100}
-  else{base=Math.round(amt/(1+rate)*100)/100;tax=Math.round((amt-base)*100)/100}
-  const r2=x=>Math.round(x*100)/100;
-  let dAmt=0,dPct=0;
-  if(disc.cust){const v=num($("dCustVal").value);if(disc.unit==="amt"){dAmt=Math.min(r2(v),base);dPct=base?dAmt/base*100:0}else{dPct=Math.min(v,100);dAmt=r2(base*dPct/100)}}
-  else if(disc.p){dPct=disc.p;dAmt=r2(base*dPct/100)}
-  const origTax=tax, sub=r2(base-dAmt);
-  if(dAmt>0)tax=r2(sub*rate);
-  const tipBase=dAmt>0&&disc.tipOn==="orig"?(st.tipOn==="pre"?base:base+origTax):(st.tipOn==="pre"?sub:sub+tax);
-  let pct,tip;
-  if(cust.on&&cust.unit==="amt"){tip=Math.round(num($("custVal").value)*100)/100;pct=tipBase?tip/tipBase*100:0}
-  else{pct=cust.on?num($("custVal").value):+$("tip").value;tip=Math.round(tipBase*pct)/100}
+  // all money math in whole cents; rc() rounds half-up after stripping float noise (e.g. 100.49999 -> 100.5 -> 101)
+  const rc=x=>Math.round(+(+x).toPrecision(12)), amtC=Math.round(amt*100);
+  let baseC,taxC;
+  if(st.mode==="sub"){baseC=amtC;taxC=rc(baseC*rate)}
+  else{baseC=rc(amtC/(1+rate));taxC=amtC-baseC}
+  let dC=0,dPct=0;
+  if(disc.cust){const v=num($("dCustVal").value);if(disc.unit==="amt"){dC=Math.min(Math.round(v*100),baseC);dPct=baseC?dC/baseC*100:0}else{dPct=Math.min(v,100);dC=rc(baseC*dPct/100)}}
+  else if(disc.p){dPct=disc.p;dC=rc(baseC*dPct/100)}
+  const origTaxC=taxC, subC=baseC-dC;
+  if(dC>0)taxC=rc(subC*rate);
+  const tipBaseC=dC>0&&disc.tipOn==="orig"?(st.tipOn==="pre"?baseC:baseC+origTaxC):(st.tipOn==="pre"?subC:subC+taxC);
+  let pct,tipC;
+  if(cust.on&&cust.unit==="amt"){tipC=Math.round(num($("custVal").value)*100);pct=tipBaseC?tipC/tipBaseC*100:0}
+  else{pct=cust.on?num($("custVal").value):+$("tip").value;tipC=rc(tipBaseC*pct/100)}
   if(cust.on)$("tip").value=Math.min(40,Math.round(pct));
   const pl=+pct.toFixed(1);
-  const total=Math.round((sub+tax+tip)*100)/100;
+  const totalC=subC+taxC+tipC;
+  const base=baseC/100,tax=taxC/100,dAmt=dC/100,sub=subC/100,tip=tipC/100,total=totalC/100;
   const cents=Math.round(total*100), each=Math.floor(cents/n), extra=cents-each*n;
   R={amt,base,sub,dAmt,dPct:+dPct.toFixed(1),tax,tip,total,pct:pl,n,rate:num($("rate").value),ab:place(),each:each/100,extra};
   R.names=splitMode==="names"&&ppl.length>0;
@@ -576,7 +663,7 @@ function calc(){
   $("tipOut").textContent=cust.on&&cust.unit==="amt"?`${fmt(tip)} · ${pl}%`:pl+"%";
   document.querySelectorAll("#chips button").forEach(b=>b.setAttribute("aria-pressed",b.id==="custBtn"?cust.on:(!cust.on&&+b.dataset.p===pl)));
   $("pill").textContent=`${R.ab} · ${n===1?"1 person":n+" people"}`;
-  $("oBase").textContent=fmt(sub);$("oBase").previousElementSibling.textContent=dAmt>0?(disc.cust&&disc.unit==="amt"?`Base −${fmt(dAmt)}`:`Base −${R.dPct}%`):"Base";$("oTax").textContent=fmt(tax);$("oTip").textContent=fmt(tip);$("oTotal").textContent=fmt(total);
+  $("check").querySelector(".break").classList.toggle("wide",fmt(total).length>8);$("oBase").textContent=fmt(sub);$("oBase").previousElementSibling.textContent=dAmt>0?(disc.cust&&disc.unit==="amt"?`Base −${fmt(dAmt)}`:`Base −${R.dPct}%`):"Base";$("oTax").textContent=fmt(tax);$("oTip").textContent=fmt(tip);$("oTotal").textContent=fmt(total);
   $("oRate").textContent=`Tax ${R.rate}%`;$("oTipPct").textContent=`Tip ${pl}%`;
   $("perLbl").textContent=n===1?"You pay":"Per person";
   {const v=fmt(extra?(each+1)/100:each/100).slice(1);$("oPer").innerHTML="<small>$</small>"+v;}
@@ -589,9 +676,10 @@ function calc(){
   if(R.paying<n&&!R.names){const parts=[`Just yourself: ${fmt(R.forK(1))}`];for(let k=2;k<=Math.min(n-R.paying+1,4);k++)parts.push(`for ${k} people: ${fmt(R.forK(k))}`);
     cnote=parts.join(" · ")}
   $("covNote").hidden=!cnote;$("covNote").textContent=cnote;
-  const note=extra&&!(R.paying<n)?`${extra} pay ${fmt((each+1)/100)}, ${n-extra} pay ${fmt(each/100)} so the cents add up.`:"";
+  const note=extra&&!(R.paying<n)&&!R.names?`${extra} pay ${fmt((each+1)/100)}, ${n-extra} pay ${fmt(each/100)} so the cents add up.`:"";
   const fullNote=[dAmt>0?`Includes ${fmt(dAmt)} off (${R.dPct}%), from ${fmt(base)}.`:"",note].filter(Boolean).join(" ");
   $("oNote").hidden=!fullNote;$("oNote").textContent=fullNote;
+  if(typeof scheduleHistory==="function"&&histReady)scheduleHistory();
 }
 
 function applyDefaults(){
@@ -619,7 +707,7 @@ function summary(){
 function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
 function drawPNG(){
   return new Promise(res=>{
-    const s=3,W=380,PAY=R.names?members().filter(m=>!m.by):[],PL=PAY.length,H=(R.extra?318:296)+(PL?PL*24+30:0)+(R.dAmt>0?24:0);
+    const s=3,W=380,PAY=R.names?members().filter(m=>!m.by):[],PL=PAY.length,XN=R.extra&&!R.names,H=(XN?318:296)+(PL?PL*24+30:0)+(R.dAmt>0?24:0);
     const c=document.createElement("canvas");c.width=W*s;c.height=H*s;const g=c.getContext("2d");g.scale(s,s);
     const mono='"IBM Plex Sans", system-ui, sans-serif', sans=mono;
     g.fillStyle="#f2f4f7";g.fillRect(0,0,W,H);
@@ -630,7 +718,7 @@ function drawPNG(){
     g.fillStyle="#f5f6f9";g.font=`600 46px ${mono}`;g.fillText(fmt(R.extra?R.each+.01:R.each),L,100);
     g.fillStyle="#a9b6c8";g.font=`500 12px ${mono}`;g.fillText(`${R.ab} · ${R.n===1?"1 person":R.n+" people"}`,L,124);
     let y=124;
-    if(R.extra){y+=20;g.font=`400 11px ${sans}`;g.fillText(`${R.extra} pay ${fmt(R.each+.01)}, ${R.n-R.extra} pay ${fmt(R.each)}`,L,y)}
+    if(XN){y+=20;g.font=`400 11px ${sans}`;g.fillText(`${R.extra} pay ${fmt(R.each+.01)}, ${R.n-R.extra} pay ${fmt(R.each)}`,L,y)}
     y+=22;g.fillStyle="rgba(255,255,255,.12)";g.fillRect(L,y,Rx-L,1);y+=28;
     [...(R.dAmt>0?[["Subtotal",fmt(R.base)],[`Discount ${R.dPct}%`,"−"+fmt(R.dAmt)]]:[["Base",fmt(R.base)]]),[`Tax ${R.rate}%`,fmt(R.tax)],[`Tip ${R.pct}%`,fmt(R.tip)]].forEach(([a,b])=>{
       g.fillStyle="#a9b6c8";g.font=`400 13px ${sans}`;g.fillText(a,L,y);
@@ -674,7 +762,147 @@ $("share").onclick=async()=>{
 };
 $("copyTxt").onclick=copyText;
 
-applyDefaults();renderFavs();calc();
+var histReady=false;
+const HKEY="guestcheck.history",HMAX=20;
+let hist=[];try{hist=JSON.parse(localStorage.getItem(HKEY)||"[]")}catch(e){}
+let hCur=null,hOpen=null,hClearArm=0;
+function saveHistStore(){try{localStorage.setItem(HKEY,JSON.stringify(hist));return true}catch(e){return false}}
+function snapshot(){
+  const e={ts:Date.now(),place:R.ab,total:R.total,base:R.base,sub:R.sub,dAmt:R.dAmt,dPct:R.dPct,tax:R.tax,rate:R.rate,tip:R.tip,pct:R.pct,n:R.n};
+  if(R.names){e.people=members().filter(m=>!m.by).map(m=>({name:m.me?"You":m.name,amt:amtFor(m.key),covers:coveredBy(m.key).map(c=>c.me?"You":c.name)}));
+    e.all=members().map(m=>m.me?"You":m.name)}
+  else{e.each=R.forK(1);e.paying=R.paying}
+  e.sig=JSON.stringify([e.total,e.n,e.people||e.each]);return e}
+function recordHistory(quiet){
+  if(!(R.total>0)){if(!quiet)toast("Enter a bill amount first.");return}
+  const e=snapshot();
+  const cur=hCur&&hist.find(h=>h.id===hCur);
+  if(cur&&Date.now()-cur.ts<30*60*1000){if(cur.sig===e.sig&&quiet)return;Object.assign(cur,e,{id:cur.id});hist=[cur,...hist.filter(h=>h!==cur)]}
+  else{if(hist[0]&&hist[0].sig===e.sig){if(!quiet)toast("Already in history.");return}e.id=Date.now().toString(36);hist.unshift(e);hCur=e.id}
+  hist=hist.slice(0,HMAX);const ok=saveHistStore();renderHist();
+  if(!quiet)toast(ok?"Saved to history":"This browser blocked saving history.")}
+function hDateOk(ts){const v=$("hDate").value,d=new Date(ts),now=new Date();
+  const sod=x=>{const y=new Date(x);y.setHours(0,0,0,0);return y.getTime()};
+  if(v==="all")return true;if(v==="today")return sod(d)===sod(now);
+  if(v==="7"||v==="30")return ts>=sod(now)-(+v-1)*864e5;
+  if(v==="month")return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  if(v==="pick"){const pv=$("hPick").value;if(!pv)return true;const [y,mo,da]=pv.split("-").map(Number);return d.getFullYear()===y&&d.getMonth()===mo-1&&d.getDate()===da}
+  return true}
+function personIn(e,name){return (e.all||[]).includes(name)}
+function personAmt(e,name){if(!e.people)return null;const p=e.people.find(x=>x.name===name);if(p)return {amt:p.amt,covers:p.covers};
+  const c=e.people.find(x=>x.covers.includes(name));return c?{coveredBy:c.name}:null}
+let hWho="",hShown=5,hWIdx=-1,hWItems=[];
+function histNames(){return [...new Set(hist.flatMap(e=>e.all||[]))].sort((a,b)=>a==="You"?-1:b==="You"?1:a.localeCompare(b))}
+function fillPersonFilter(){if(hWho&&!histNames().includes(hWho))hWho="";if(document.activeElement!==$("hWhoIn"))$("hWhoIn").value=hWho;
+  const b=$("hWhoBtn");b.className="hwho-btn"+(hWho?"":" caret");b.textContent=hWho?"×":"";b.setAttribute("aria-label",hWho?"Show all people":"Show people")}
+function renderWho(){const q=$("hWhoIn").value,ul=$("hWhoList");ul.innerHTML="";
+  let names=histNames().map(n=>({n,m:q.trim()&&q!==hWho?fuzzy(q,n):{score:1,hits:[]}})).filter(x=>x.m).sort((a,b)=>b.m.score-a.m.score);
+  hWItems=[{n:"",m:{hits:[]}},...names];if(q.trim()&&q!==hWho)hWItems=names;
+  if(!hWItems.length){const li=document.createElement("li");li.className="hempty";li.textContent="No one by that name in your history";ul.appendChild(li)}
+  hWItems.forEach((it,i)=>{const li=document.createElement("li");li.role="option";li.id="hw"+i;li.setAttribute("aria-selected",i===hWIdx);
+    const av=document.createElement("div");av.className="av";av.textContent=it.n?(it.n==="You"?"ME":initials(it.n)):"∗";
+    const nm=document.createElement("div");nm.className="nm";const sp=document.createElement("span");
+    if(!it.n)sp.textContent="All people";else{const hs=new Set(it.m.hits);[...it.n].forEach((ch,k)=>{if(hs.has(k)){const m=document.createElement("mark");m.textContent=ch;sp.appendChild(m)}else sp.appendChild(document.createTextNode(ch))})}
+    nm.appendChild(sp);const cnt=document.createElement("span");cnt.className="tag";cnt.textContent=it.n?`${hist.filter(e=>personIn(e,it.n)).length} bills`:`${hist.length} bills`;
+    li.append(av,nm,cnt);li.addEventListener("pointerdown",ev=>{ev.preventDefault();pickWho(it.n)});ul.appendChild(li)});
+  ul.hidden=false;$("hWhoIn").setAttribute("aria-expanded",true);$("hWhoIn").setAttribute("aria-activedescendant",hWIdx>=0?"hw"+hWIdx:"")}
+function closeWho(){$("hWhoList").hidden=true;$("hWhoIn").setAttribute("aria-expanded",false)}
+function pickWho(n){hWho=n;hShown=5;$("hWhoIn").value=n;closeWho();$("hWhoIn").blur();renderHist()}
+$("hWhoIn").addEventListener("focus",()=>{$("hWhoIn").select();hWIdx=-1;renderWho()});
+$("hWhoIn").addEventListener("input",()=>{hWIdx=$("hWhoIn").value.trim()?0:-1;renderWho()});
+$("hWhoIn").addEventListener("blur",()=>{closeWho();$("hWhoIn").value=hWho});
+$("hWhoIn").addEventListener("keydown",e=>{
+  if(e.key==="ArrowDown"){e.preventDefault();hWIdx=Math.min(hWItems.length-1,hWIdx+1);renderWho()}
+  else if(e.key==="ArrowUp"){e.preventDefault();hWIdx=Math.max(0,hWIdx-1);renderWho()}
+  else if(e.key==="Enter"){e.preventDefault();const it=hWItems[hWIdx>=0?hWIdx:0];if(it)pickWho(it.n)}
+  else if(e.key==="Escape"){closeWho();$("hWhoIn").blur()}});
+$("hWhoBtn").addEventListener("pointerdown",e=>e.preventDefault());
+$("hWhoBtn").onclick=()=>{if(hWho)pickWho("");else{$("hWhoIn").focus()}};
+function renderHist(){
+  $("hCount").textContent=hist.length?`(${hist.length})`:"";fillPersonFilter();$("hPick").hidden=$("hDate").value!=="pick";
+  const who=hWho,list=hist.filter(e=>hDateOk(e.ts)&&(!who||personIn(e,who)));
+  const ul=$("hList");ul.innerHTML="";
+  const df=new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric"}),tf=new Intl.DateTimeFormat(undefined,{hour:"numeric",minute:"2-digit"});
+  if(!hist.length){$("hSum").textContent="No bills yet. Enter a bill amount and it saves here automatically.";$("clearHist").hidden=true;$("hShare").hidden=true;$("hMore").hidden=true;if(hUndo)ul.appendChild(undoRow());return}
+  $("clearHist").hidden=false;
+  if(who){let paid=0,cnt=0;list.forEach(e=>{const pa=personAmt(e,who);if(pa&&pa.amt!=null){paid+=pa.amt;cnt++}});
+    $("hSum").textContent=`${who}: ${list.length} ${list.length===1?"bill":"bills"}`+(cnt?` · paid ${fmt(Math.round(paid*100)/100)}`:"")+(cnt<list.length?` · covered on ${list.length-cnt}`:"")}
+  else $("hSum").textContent=`${list.length} of ${hist.length} ${hist.length===1?"bill":"bills"} · ${fmt(Math.round(list.reduce((a,e)=>a+e.total,0)*100)/100)} total`;
+  $("hShare").hidden=!list.length;
+  const shown=list.slice(0,hShown),more=list.length-shown.length,mb=$("hMore");
+  mb.hidden=list.length<=5;mb.textContent=more>0?`Show ${Math.min(5,more)} more · ${more} older ${more===1?"bill":"bills"}`:"Show fewer";
+  mb.onclick=()=>{hShown=more>0?hShown+5:5;renderHist()};
+  if(!list.length){if(hUndo){ul.appendChild(undoRow());return}const li=document.createElement("li");li.className="hempty";li.textContent="No bills match these filters.";ul.appendChild(li);return}
+  shown.forEach(e=>{const li=document.createElement("li");const b=document.createElement("button");b.className="hrow";b.type="button";b.setAttribute("aria-expanded",hOpen===e.id);
+    const d=new Date(e.ts);const mk=(c,t)=>{const x=document.createElement("span");x.className=c;x.textContent=t;return x};
+    const ppl=e.all?e.all.filter(n=>n!=="You"):[];
+    b.append(mk("hd",`${df.format(d)} · ${tf.format(d)} · ${e.place}`),mk("ht",fmt(e.total)),
+      mk("hp",e.people?(ppl.length?"With "+ppl.join(", "):"Just you"):`${e.n} ${e.n===1?"person":"people"}`),
+      mk("hx",e.people?`${e.n} people`:`${fmt(e.each)} each`));
+    if(who){const pa=personAmt(e,who);b.appendChild(mk("hme",pa?(pa.amt!=null?`${who} paid ${fmt(pa.amt)}${pa.covers.length?" (+ "+pa.covers.join(", ")+")":""}`:`${who} was covered by ${pa.coveredBy}`):""))}
+    b.onclick=()=>{hOpen=hOpen===e.id?null:e.id;renderHist()};
+    const top=document.createElement("div");top.className="hitem";top.appendChild(b);
+    const tr=document.createElement("button");tr.className="htrash";tr.type="button";tr.innerHTML=ICON.trash;
+    tr.setAttribute("aria-label",`Delete bill from ${df.format(d)}, ${fmt(e.total)}`);tr.onclick=()=>deleteBill(e.id);top.appendChild(tr);
+    li.appendChild(top);
+    if(hOpen===e.id){const dt=document.createElement("div");dt.className="hdet";const row=(a,v,c)=>{const r=document.createElement("div");r.className="r"+(c?" "+c:"");const s1=document.createElement("span");s1.textContent=a;const s2=document.createElement("b");s2.textContent=v;r.append(s1,s2);dt.appendChild(r)};
+      if(e.dAmt>0){row("Subtotal",fmt(e.base));row(`Discount ${e.dPct}%`,"−"+fmt(e.dAmt))}else row("Base",fmt(e.base));
+      row(`Tax ${e.rate}%`,fmt(e.tax));row(`Tip ${e.pct}%`,fmt(e.tip));row("Total",fmt(e.total));
+      if(e.people){e.people.forEach((p,i)=>row(p.name+(p.covers.length?" (+ "+p.covers.join(", ")+")":""),fmt(p.amt),i===0?"sep":""))}
+      else row(`Split ${e.n} ways`,`${fmt(e.each)} each`,"sep");
+      const del=document.createElement("button");del.className="hdel";del.type="button";del.textContent="Delete this bill";
+      del.onclick=()=>deleteBill(e.id);
+      const sh=document.createElement("button");sh.className="hdel hsh";sh.type="button";sh.textContent="Share this bill";sh.onclick=()=>shareText(billText(e,who),"Bill");
+      const acts=document.createElement("div");acts.className="hacts";acts.append(sh,del);dt.appendChild(acts);li.appendChild(dt)}
+    ul.appendChild(li);
+    if(hUndo&&hUndo.after===e.id)ul.appendChild(undoRow())});
+  if(hUndo&&hUndo.after===null)ul.insertBefore(undoRow(),ul.firstChild)}
+let hUndo=null,hUndoT=null;
+function undoRow(){const li=document.createElement("li");li.className="hundo";const sp=document.createElement("span");sp.textContent=`Bill deleted (${fmt(hUndo.entry.total)})`;
+  const b=document.createElement("button");b.type="button";b.textContent="Undo";b.onclick=()=>{hist.splice(Math.min(hUndo.index,hist.length),0,hUndo.entry);hUndo=null;clearTimeout(hUndoT);saveHistStore();renderHist()};
+  li.append(sp,b);return li}
+function deleteBill(id){const i=hist.findIndex(h=>h.id===id);if(i<0)return;
+  const entry=hist[i],vis=hist.filter(h=>hDateOk(h.ts)&&(!hWho||personIn(h,hWho)));
+  const vi=vis.indexOf(entry);hUndo={entry,index:i,after:vi>0?vis[vi-1].id:null};
+  hist.splice(i,1);if(hCur===id)hCur=null;if(hOpen===id)hOpen=null;saveHistStore();renderHist();
+  clearTimeout(hUndoT);hUndoT=setTimeout(()=>{hUndo=null;renderHist()},6000)}
+let hTimer=null;
+function scheduleHistory(){clearTimeout(hTimer);if(!R||!(R.total>0)){if(R&&R.total===0)hCur=null;return}hTimer=setTimeout(()=>recordHistory(true),3000)}
+function flushHistory(){if(hTimer){clearTimeout(hTimer);hTimer=null;if(R&&R.total>0)recordHistory(true)}}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flushHistory()});
+window.addEventListener("pagehide",flushHistory);
+$("hDate").addEventListener("change",()=>{hShown=5;renderHist()});$("hPick").addEventListener("change",()=>{hShown=5;renderHist()});
+function billLine(e,who){const d=new Date(e.ts),df=new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric"});
+  let t=`${df.format(d)} · ${e.place} · ${fmt(e.total)} (${e.n} ${e.n===1?"person":"people"})`;
+  if(who){const pa=personAmt(e,who);if(pa)t+=pa.amt!=null?` · ${who} paid ${fmt(pa.amt)}${pa.covers.length?" (+ "+pa.covers.join(", ")+")":""}`:` · ${who} covered by ${pa.coveredBy}`}
+  else if(e.people)t+=" · "+e.people.map(p=>`${p.name} ${fmt(p.amt)}`).join(", ");else t+=` · ${fmt(e.each)} each`;return t}
+function billText(e,who){const lines=[`Bill from ${new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",year:"numeric"}).format(new Date(e.ts))} · ${e.place}`];
+  if(e.dAmt>0){lines.push(`Subtotal: ${fmt(e.base)}`,`Discount ${e.dPct}%: −${fmt(e.dAmt)}`)}else lines.push(`Base: ${fmt(e.base)}`);
+  lines.push(`Tax ${e.rate}%: ${fmt(e.tax)}`,`Tip ${e.pct}%: ${fmt(e.tip)}`,`Total: ${fmt(e.total)}`,"");
+  if(e.people)e.people.forEach(p=>lines.push(`${p.name}${p.covers.length?" (+ "+p.covers.join(", ")+")":""}: ${fmt(p.amt)}`));else lines.push(`Split ${e.n} ways: ${fmt(e.each)} each`);
+  return lines.join("\n")}
+function historyText(){const who=hWho,list=hist.filter(e=>hDateOk(e.ts)&&(!who||personIn(e,who)));
+  const dl=$("hDate").selectedOptions[0].textContent,range=$("hDate").value==="all"?"":($("hDate").value==="pick"&&$("hPick").value?` · ${$("hPick").value}`:` · ${dl}`);
+  const head=`Tip Splitter history${who?" · "+who:""}${range}`;
+  const tot=fmt(Math.round(list.reduce((a,e)=>a+e.total,0)*100)/100);
+  let foot=`${list.length} ${list.length===1?"bill":"bills"} · ${tot} total`;
+  if(who){let paid=0;list.forEach(e=>{const pa=personAmt(e,who);if(pa&&pa.amt!=null)paid+=pa.amt});foot+=` · ${who} paid ${fmt(Math.round(paid*100)/100)}`}
+  return [head,"",...list.map(e=>billLine(e,who)),"",foot].join("\n")}
+async function shareText(text,what){
+  try{if(navigator.share){await navigator.share({text});return}}catch(e){if(e&&e.name==="AbortError")return}
+  try{await navigator.clipboard.writeText(text);toast(`${what} copied. Paste it anywhere.`)}catch(e){toast("Sharing was blocked here.")}}
+$("hShare").onclick=()=>shareText(historyText(),"History");
+$("clearHist").onclick=()=>{if(Date.now()-hClearArm<4000){hist=[];hCur=null;saveHistStore();renderHist();$("clearHist").textContent="Clear history";toast("History cleared");return}
+  hClearArm=Date.now();$("clearHist").textContent="Tap again to clear all bills";setTimeout(()=>{$("clearHist").textContent="Clear history"},4000)};
+["copyImg","share","copyTxt","textAll"].forEach(id=>$(id).addEventListener("click",()=>{clearTimeout(hTimer);hTimer=null;if(R.total>0)recordHistory(true)},true));
+applyDefaults();renderFavs();calc();renderHist();histReady=true;
 </script>
 
-</body></html>
+<script>
+if("serviceWorker" in navigator&&location.protocol==="https:"){
+  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").then(r=>r.update()).catch(()=>{})});
+}
+if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}
+</script>
+</body>
+</html>
