@@ -1,5 +1,39 @@
 # Release Notes
 
+## Version: 1.0.2
+### Date: October 12, 2026
+
+Today the app learned to remember: every bill now saves to a History section you can filter, share and clean up. A full regression pass also caught and fixed a 1¢ rounding error and two display bugs, and the app is now set up to install on Android.
+
+## History
+Your last 20 bills are kept in a History section that opens like Defaults. Bills save on their own, so there is no Save button.
+
+- **Automatic saving:** a bill saves about 3 seconds after you stop changing it, so half-typed amounts are never stored. Editing the tip, people or discount afterward updates the same entry instead of adding a duplicate. Clearing the amount back to 0.00 starts a new bill.
+- **Instant saves:** sharing, taking a screenshot, copying or texting saves right away, and so does switching away from the app.
+- **Filter by person:** type a name or open the dropdown, which lists everyone in your history with their bill counts. Typing is forgiving, so "jrd" finds Jordan Diaz. The summary shows that person's totals, for example "Alex Kim: 3 bills · paid $132.40," and each bill shows what they paid or who covered them.
+- **Filter by date:** Any time, Today, Last 7 days, Last 30 days, This month, or Pick a date.
+- **Five at a time:** the list opens with the 5 most recent bills. "Show 5 more" loads older ones, and "Show fewer" collapses back.
+- **Details:** tap a bill to see the base, discount, tax, tip and each person's share.
+- **Share:** a share icon sends every bill that matches your filters, with a total at the bottom. Each opened bill also has Share this bill. On a phone this opens the share sheet; where sharing is blocked, the text is copied instead.
+- **Delete:** a trash icon on every row removes a bill, with an Undo for 6 seconds. Clear history asks for a second tap before wiping everything.
+- **Where it's stored:** in the phone's browser storage for this site, not on a server. It lasts until you clear Chrome's site data or uninstall the app, and it doesn't move to a new phone or a different web address.
+
+## Fixes from regression testing
+A 138-check automated suite now covers every feature, and a separate pass ran 2,496 odd-number cases against an exact reference. Everything passes.
+
+- **Exact-cent rounding:** a $10.05 bill with 10% off has a discount of exactly 100.5¢, which should round up to $1.01; the app rounded it to $1.00, leaving the total 1¢ high. All money math now runs in whole cents with consistent half-up rounding, which also protects tax and tip on amounts ending in 5¢.
+- **Large bills on the summary card:** above about $1,000, the Base and Tax figures overlapped. The breakdown now switches to two rows when amounts get long, and the big per-person number shrinks on small phones so even a $13 million bill fits.
+- **Screenshot in Who's paying mode:** the image showed an extra-pennies line ("3 pay $35.93, 1 pay $35.92") that didn't match covered amounts like $71.85. That line is gone in this mode, since each person's exact amount is listed.
+- **Pop-up messages restored:** confirmations like "Copied as text" had been removed by mistake when the share icons moved to the top bar, which also made those actions throw an error after finishing. They show again.
+
+## Install on Android
+The repo's manifest, icon and offline file are now linked from the app, so Chrome on Android offers Install app.
+
+- **Installs like an app:** home-screen icon, full-screen window and navy status bar.
+- **Works offline,** and checks for a new version each time it opens.
+- **Keeps your data safer:** the app asks Chrome to protect its storage so History and favorites aren't cleared when the phone runs low on space.
+- **Contacts and texting** work once the app is installed.
+
 ## Version: 1.0.1
 ### Date: October 9, 2026
 
