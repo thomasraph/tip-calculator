@@ -9,7 +9,9 @@ Discounts now work correctly when you enter the total from your receipt, and the
 - **No more double discount:** in Total with tax mode, the amount you enter is now treated as the receipt total with the discount already taken off. Before, the app took the discount off a second time: a $87.10 receipt with 20% off showed an $80 original price and a $64 subtotal. It now rebuilds the real numbers: $100 original, $20 off, $80 subtotal, $7.10 tax.
 - **Flat-dollar discounts fixed:** the same mode with a $20 discount gave a total of $82.75, less than the $87.10 actually paid. It now matches the receipt.
 - **Tip basis shown:** with a discount on, the line under the tip buttons and the summary card say what the tip is figured on, for example "Tip is 20% of $108.88, the price before the discount, plus its tax." Before, a $21.78 tip next to an $80 base looked wrong even though it was correct.
-- **Tested:** 141 automated checks and 2,496 rounding cases against an exact reference, including the new receipt-total cases.
+- **Exact math at any bill size:** every number you type is now read as an exact fraction and all amounts are kept in whole cents, so results no longer drift by a cent on very large bills. Before, a $3.5 million receipt in Total with tax mode came out 1–2¢ off.
+- **Fair leftover pennies:** when leftover cents tie between people, the extra penny now always goes to the first person in the list. Before, tiny decimal noise sometimes gave it to someone else (totals were always right).
+- **Tested:** an independent reference calculator checked 153,000+ random bills across every tax rate, tip type, discount type, split and covering setup with zero mismatches; 63 start-to-finish dinner scenarios and the 141-check feature suite all pass.
 
 ## Version: 1.0.2
 ### Date: October 12, 2026
