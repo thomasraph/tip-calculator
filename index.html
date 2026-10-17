@@ -638,14 +638,25 @@ function calc(){
   const amt=num($("amt").value), rate=num($("rate").value)/100, n=splitMode==="names"?ppl.length+1:+$("people").value;
   // all money math in whole cents; rc() rounds half-up after stripping float noise (e.g. 100.49999 -> 100.5 -> 101)
   const rc=x=>Math.round(+(+x).toPrecision(12)), amtC=Math.round(amt*100);
-  let baseC,taxC;
-  if(st.mode==="sub"){baseC=amtC;taxC=rc(baseC*rate)}
-  else{baseC=rc(amtC/(1+rate));taxC=amtC-baseC}
-  let dC=0,dPct=0;
-  if(disc.cust){const v=num($("dCustVal").value);if(disc.unit==="amt"){dC=Math.min(Math.round(v*100),baseC);dPct=baseC?dC/baseC*100:0}else{dPct=Math.min(v,100);dC=rc(baseC*dPct/100)}}
-  else if(disc.p){dPct=disc.p;dC=rc(baseC*dPct/100)}
-  const origTaxC=taxC, subC=baseC-dC;
-  if(dC>0)taxC=rc(subC*rate);
+  // which discount is on: a percent (dP) or a flat amount in cents (dFlat)
+  let dP=0,dFlat=0;
+  if(disc.cust){const v=num($("dCustVal").value);if(disc.unit==="amt")dFlat=Math.round(v*100);else dP=Math.min(v,100)}
+  else if(disc.p)dP=disc.p;
+  let baseC,taxC,dC=0,dPct=0,subC,origTaxC;
+  if(st.mode==="sub"){
+    // "Before tax": the amount typed is the original subtotal; the discount comes off it, then tax is charged on what's left
+    baseC=amtC;origTaxC=rc(baseC*rate);
+    if(dFlat){dC=Math.min(dFlat,baseC);dPct=baseC?dC/baseC*100:0}else if(dP){dPct=dP;dC=rc(baseC*dP/100)}
+    subC=baseC-dC;taxC=dC>0?rc(subC*rate):origTaxC;
+  }else{
+    // "Total with tax": the amount typed is the receipt total, which already has the discount taken off.
+    // Back out the receipt's tax, then rebuild the original price from the discount (used for "tip on original price").
+    subC=rc(amtC/(1+rate));taxC=amtC-subC;
+    if(dFlat){dC=dFlat;baseC=subC+dC;dPct=baseC?dC/baseC*100:0}
+    else if(dP){dPct=dP;baseC=dP>=100?subC:rc(subC/(1-dP/100));dC=baseC-subC}
+    else baseC=subC;
+    origTaxC=rc(baseC*rate);
+  }
   const tipBaseC=dC>0&&disc.tipOn==="orig"?(st.tipOn==="pre"?baseC:baseC+origTaxC):(st.tipOn==="pre"?subC:subC+taxC);
   let pct,tipC;
   if(cust.on&&cust.unit==="amt"){tipC=Math.round(num($("custVal").value)*100);pct=tipBaseC?tipC/tipBaseC*100:0}
@@ -671,13 +682,14 @@ function calc(){
   document.querySelectorAll("#dchips button").forEach(b=>b.setAttribute("aria-pressed",b.id==="dCustBtn"?disc.cust:b.id==="dNone"?(!disc.cust&&!disc.p):(!disc.cust&&+b.dataset.p===disc.p)));
   $("discOut").textContent=dAmt>0?`−${fmt(dAmt)}`:"None";
   $("dTipSeg").hidden=!(dAmt>0);$("dHint").hidden=!(dAmt>0);
-  $("dHint").textContent=disc.tipOn==="orig"?`Tip is figured on the price before the discount, so your server isn't tipped less.`:`Tip is figured on the price after the discount.`;
+  const tbTxt=disc.tipOn==="orig"?(st.tipOn==="pre"?"the price before the discount":"the price before the discount, plus its tax"):(st.tipOn==="pre"?"the discounted price":"the discounted price, plus tax");
+  $("dHint").textContent=`Tip is ${pl}% of ${fmt(tipBaseC/100)}, ${tbTxt}.`+(disc.tipOn==="orig"?" Your server isn't tipped less because of the discount.":"")+(st.mode==="tot"?" The total you entered is treated as already discounted.":"");
   let cnote="";
   if(R.paying<n&&!R.names){const parts=[`Just yourself: ${fmt(R.forK(1))}`];for(let k=2;k<=Math.min(n-R.paying+1,4);k++)parts.push(`for ${k} people: ${fmt(R.forK(k))}`);
     cnote=parts.join(" · ")}
   $("covNote").hidden=!cnote;$("covNote").textContent=cnote;
   const note=extra&&!(R.paying<n)&&!R.names?`${extra} pay ${fmt((each+1)/100)}, ${n-extra} pay ${fmt(each/100)} so the cents add up.`:"";
-  const fullNote=[dAmt>0?`Includes ${fmt(dAmt)} off (${R.dPct}%), from ${fmt(base)}.`:"",note].filter(Boolean).join(" ");
+  const fullNote=[dAmt>0?`Includes ${fmt(dAmt)} off (${R.dPct}%), from ${fmt(base)}. Tip is ${pl}% of ${fmt(tipBaseC/100)}.`:"",note].filter(Boolean).join(" ");
   $("oNote").hidden=!fullNote;$("oNote").textContent=fullNote;
   if(typeof scheduleHistory==="function"&&histReady)scheduleHistory();
 }

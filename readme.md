@@ -1,5 +1,16 @@
 # Release Notes
 
+## Version: 1.0.3
+### Date: October 16, 2026
+
+Discounts now work correctly when you enter the total from your receipt, and the app shows exactly what the tip is based on.
+
+## Discount fixes
+- **No more double discount:** in Total with tax mode, the amount you enter is now treated as the receipt total with the discount already taken off. Before, the app took the discount off a second time: a $87.10 receipt with 20% off showed an $80 original price and a $64 subtotal. It now rebuilds the real numbers: $100 original, $20 off, $80 subtotal, $7.10 tax.
+- **Flat-dollar discounts fixed:** the same mode with a $20 discount gave a total of $82.75, less than the $87.10 actually paid. It now matches the receipt.
+- **Tip basis shown:** with a discount on, the line under the tip buttons and the summary card say what the tip is figured on, for example "Tip is 20% of $108.88, the price before the discount, plus its tax." Before, a $21.78 tip next to an $80 base looked wrong even though it was correct.
+- **Tested:** 141 automated checks and 2,496 rounding cases against an exact reference, including the new receipt-total cases.
+
 ## Version: 1.0.2
 ### Date: October 12, 2026
 
