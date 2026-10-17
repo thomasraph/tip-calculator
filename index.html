@@ -636,10 +636,12 @@ $("dCustVal").addEventListener("input",calc);
 function setDTip(t){disc.tipOn=t;$("dOrig").setAttribute("aria-pressed",t==="orig");$("dDisc").setAttribute("aria-pressed",t==="disc");calc()}
 $("dOrig").onclick=()=>setDTip("orig");$("dDisc").onclick=()=>setDTip("disc");
 // exact decimal parsing: "12.345" -> {n:12345n, d:1000n}; ignores anything that isn't a digit or the first decimal point
-function frac(v){const t=String(v==null?"":v).replace(/[^0-9.]/g,"").match(/^(\d*)(?:\.(\d*))?/);const ip=t[1]||"",fp=t[2]||"";
+function frac(v){if(/-/.test(String(v==null?"":v)))return {n:0n,d:1n};const t=String(v==null?"":v).replace(/[^0-9.]/g,"").match(/^(\d*)(?:\.(\d*))?/);const ip=t[1]||"",fp=t[2]||"";
   return {n:BigInt((ip+fp).replace(/^0+(?=\d)/,"")||"0"),d:10n**BigInt(fp.length)}}
 // a/b rounded half-up, for a>=0, b>0
 function rq(a,b){return b>0n?(2n*a+b)/(2n*b):0n}
+// negative numbers aren't allowed: they count as 0, and the box is reset to 0 when you leave it
+["rate","custVal","dCustVal"].forEach(id=>$(id).addEventListener("change",()=>{const el=$(id);if(/-/.test(el.value)){el.value="0";calc()}}));
 function calc(){
   const amt=num($("amt").value), rate=num($("rate").value)/100, n=splitMode==="names"?ppl.length+1:+$("people").value;
   // Exact money math: every number typed is read as an exact fraction (BigInt numerator/denominator),
@@ -676,7 +678,7 @@ function calc(){
   const totalC=subC+taxC+tipC;
   const base=Number(baseC)/100,tax=Number(taxC)/100,dAmt=Number(dC)/100,sub=Number(subC)/100,tip=Number(tipC)/100,total=Number(totalC)/100,tipBaseN=Number(tipBaseC);
   const cents=Math.round(total*100), each=Math.floor(cents/n), extra=cents-each*n;
-  R={amt,base,sub,dAmt,dPct:+dPct.toFixed(1),tax,tip,total,pct:pl,n,rate:num($("rate").value),ab:place(),each:each/100,extra};
+  R={amt,base,sub,dAmt,dPct:+dPct.toFixed(1),tax,tip,total,pct:pl,n,rate:/-/.test($("rate").value)?0:num($("rate").value),ab:place(),each:each/100,extra};
   R.names=splitMode==="names"&&ppl.length>0;
   R.alloc=R.names?alloc():null;
   R.paying=R.names?Object.keys(R.alloc).length:(splitMode==="count"&&covOn?Math.min(+$("paying").value||n,n):n);
@@ -711,7 +713,7 @@ function applyDefaults(){
   else{splitMode="count";st.mode="sub";st.tipOn="post";$("state").value="NY";fillCities("NY","New York City");$("rate").value=cityRate("NY","New York City");setCustom(false);$("tip").value=20;$("defNow").textContent="No defaults saved yet."}
   setTipOn(st.tipOn);setMode(st.mode);setSplit(splitMode);
 }
-$("saveDef").onclick=()=>{const ok=saveDefStore({state:$("state").value,city:$("city").value,rate:num($("rate").value),tip:R.pct,tipOn:st.tipOn,mode:st.mode,split:splitMode});
+$("saveDef").onclick=()=>{const ok=saveDefStore({state:$("state").value,city:$("city").value,rate:R.rate,tip:R.pct,tipOn:st.tipOn,mode:st.mode,split:splitMode});
   applyDefaults();toast(ok?"Defaults saved":"This browser blocked saving, so defaults won't stick here.")};
 $("clearDef").onclick=()=>{saveDefStore(null);applyDefaults();toast("Defaults cleared")};
 

@@ -11,6 +11,7 @@ Discounts now work correctly when you enter the total from your receipt, and the
 - **Tip basis shown:** with a discount on, the line under the tip buttons and the summary card say what the tip is figured on, for example "Tip is 20% of $108.88, the price before the discount, plus its tax." Before, a $21.78 tip next to an $80 base looked wrong even though it was correct.
 - **Exact math at any bill size:** every number you type is now read as an exact fraction and all amounts are kept in whole cents, so results no longer drift by a cent on very large bills. Before, a $3.5 million receipt in Total with tax mode came out 1–2¢ off.
 - **Fair leftover pennies:** when leftover cents tie between people, the extra penny now always goes to the first person in the list. Before, tiny decimal noise sometimes gave it to someone else (totals were always right).
+- **Negative numbers count as 0:** typing a negative tax rate, tip or discount (for example "-7") now counts as 0 and shows 0%, and the box resets to 0 when you leave it. Before, "-7" was read as 7%.
 - **Tested:** an independent reference calculator checked 153,000+ random bills across every tax rate, tip type, discount type, split and covering setup with zero mismatches; 63 start-to-finish dinner scenarios and the 141-check feature suite all pass.
 
 ## Version: 1.0.2
