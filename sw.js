@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tip-splitter-v7';
+const CACHE_NAME = 'tip-splitter-v8';
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {

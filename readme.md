@@ -18,6 +18,8 @@ Three new options that fit into the existing screens: a card price for restauran
 ## Real receipts tested
 - **Card fee on the whole bill:** some restaurants put the card surcharge on everything, including an automatic service charge. Under Card price you can now pick "Fee on food + tax" (default) or "Fee on total with tip". Yum Cha in Las Vegas: $91.97 with a 3% surcharge on the whole bill gives the receipt's $94.73.
 - **Cash rounded to 5¢:** with pennies going away, some places round cash totals to the nearest nickel (1–2¢ down, 3–4¢ up). Under Cash price, check "Round cash total to the nearest 5¢". A Chinatown, New York receipt: $48.64 becomes the receipt's $48.65 cash price, and the rounding shows in the summary, screenshot and shared text.
+- **Exact tip % label:** the tip percentage shown is now rounded half-up with exact math, so a custom 17.45% shows as 17.5% (it could show 17.4% before). Dollar amounts were never affected.
+- **Full regression before release:** 216,000+ random bills against an independent reference calculator (zero mismatches), 2,496 rounding cases, the 141-check feature suite, 128 start-to-finish scenario checks across two scenario packs, and the three real receipts, all passing on the exact version pushed.
 - **Checked against three real receipts** (Donutique and Yum Cha in Las Vegas, a Chinatown café in New York): every line matches once the receipt's printed tax is entered in dollars.
 
 ## Tax rounding

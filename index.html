@@ -742,11 +742,11 @@ function calc(){
   const dPct=dC>0n?(P&&dFlat===0n?Number(P.n)/Number(P.d):Number(dC)/Number(baseC)*100):0;
   const tbF=dC>0n&&disc.tipOn==="orig"?(st.tipOn==="pre"?I(baseC):fadd(I(baseC),origTaxF)):(st.tipOn==="pre"?I(subC):fadd(I(subC),taxF));
   const tipBaseC=fc(tbF);
-  let pct,tipF;
-  if(cust.on&&cust.unit==="amt"){const f=frac($("custVal").value);tipF=I(rq(f.n*100n,f.d));pct=tipBaseC>0n?Number(fc(tipF))/Number(tipBaseC)*100:0}
-  else{const f=cust.on?frac($("custVal").value):frac($("tip").value);tipF=Q(fmulr(tbF,f.n,100n*f.d));pct=Number(f.n)/Number(f.d)}
+  let pct,tipF,plX;
+  if(cust.on&&cust.unit==="amt"){const f=frac($("custVal").value);tipF=I(rq(f.n*100n,f.d));pct=tipBaseC>0n?Number(fc(tipF))/Number(tipBaseC)*100:0;plX=tipBaseC>0n?Number(rq(fc(tipF)*1000n,tipBaseC))/10:0}
+  else{const f=cust.on?frac($("custVal").value):frac($("tip").value);tipF=Q(fmulr(tbF,f.n,100n*f.d));pct=Number(f.n)/Number(f.d);plX=Number(rq(f.n*10n,f.d))/10}
   if(cust.on)$("tip").value=Math.min(40,Math.round(pct));
-  const pl=+pct.toFixed(1);
+  const pl=plX;   // tip % label rounded half-up to 0.1 with exact math
   // card price: fee % on the food and tax (not the tip)
   let feeF=I(0n),feePct=0;
   if(pay.card){let f=frac($("feePct").value);if(f.n>100n*f.d)f={n:100n,d:1n};feePct=Number(f.n)/Number(f.d);const feeBase=pay.feeOn==="all"?fadd(fadd(I(subC),taxF),tipF):fadd(I(subC),taxF);feeF=Q(fmulr(feeBase,f.n,100n*f.d))}
