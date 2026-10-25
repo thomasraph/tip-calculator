@@ -1,5 +1,25 @@
 # Release Notes
 
+## Version: 1.0.4
+### Date: October 25, 2026
+
+Three new options that fit into the existing screens: a card price for restaurants that charge more for cards, tax entered in dollars straight from a receipt, and a choice of how tax is rounded.
+
+## Card price
+- **Cash price / Card price:** a new two-button choice in the Bill section. Cash price is the default, so nothing changes unless you pick Card price.
+- **Card fee %:** picking Card price shows a small box, set to 3% to start. The fee is added to the food and tax, not the tip, and appears in the summary, the screenshot, shared text, texts and History.
+- **State rules:** in Connecticut, Maine and Massachusetts (which ban card surcharges) and in Colorado and Illinois (which cap them), a short note says so.
+
+## Tax in dollars
+- **Tap % on the tax box** to switch it to $ and type the tax printed on your receipt. Base, tax and total then match the receipt to the penny, and the tip and split follow from it.
+- **Example:** a Las Vegas receipt charged $7.31 on $87.00 (the restaurant used 8.4% instead of the official 8.375%). Entering $7.31 gives the receipt's exact $111.71.
+- Tapping $ goes back to the rate, and changing the state or city switches back automatically.
+
+## Tax rounding
+- **To the cent (default):** tax is rounded to two decimals before the tip, the way receipts do it.
+- **Exact:** tax keeps every decimal and only the total and each person's share are rounded. The lines can differ from the total by 1¢, and a note says so when they do. Found in Defaults and saved with them.
+- **Tested:** the reference calculator now covers all three options; 100,000+ random bills had zero mismatches, and 88 start-to-finish scenario checks plus the 141-check feature suite pass.
+
 ## Version: 1.0.3
 ### Date: October 16, 2026
 

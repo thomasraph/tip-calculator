@@ -99,6 +99,11 @@ h1{margin:0;font-size:1.05rem;font-weight:600;letter-spacing:-.005em}
 select,.small{width:100%;border:1px solid var(--line-2);background-color:var(--surface);color:var(--fg);font:500 .94rem var(--sans);padding:11px 12px;border-radius:10px;appearance:none;-webkit-appearance:none}
 select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
 .ratebox{position:relative}
+.unitbtn{position:absolute;right:4px;top:50%;transform:translateY(-50%);min-width:24px;height:26px;padding:0 6px;border:0;border-radius:7px;background:var(--surface-2);color:var(--focus);font:600 .85rem var(--sans);cursor:pointer}
+.unitbtn:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.payrow{display:grid;grid-template-columns:1fr;gap:8px}
+.payrow.card{grid-template-columns:1fr 92px}
+.payrow .ratebox .small{font-weight:600}
 .ratebox .small{text-align:right;padding-right:28px;font-variant-numeric:tabular-nums}
 .ratebox i{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.9rem;color:var(--muted);font-style:normal;pointer-events:none}
 select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
@@ -275,9 +280,19 @@ details[open] summary::after{transform:rotate(-135deg)}
       <div class="loc">
         <select id="state" aria-label="State"></select>
         <select id="city" aria-label="City"></select>
-        <div class="ratebox"><input id="rate" class="small" inputmode="decimal" aria-label="Sales tax percent"><i>%</i></div>
+        <div class="ratebox"><input id="rate" class="small" inputmode="decimal" aria-label="Sales tax percent"><button type="button" class="unitbtn" id="taxUnit" aria-label="Enter tax as a dollar amount instead" title="Switch between % and $">%</button></div>
       </div>
-      <p class="hint" id="rateHint">State + local rate. Edit the % to match your receipt.</p>
+      <p class="hint" id="rateHint">State + local rate. Tap % to enter the tax in dollars from your receipt.</p>
+    </div>
+    <div class="field">
+      <div class="payrow" id="payRow">
+        <div class="seg" role="group" aria-label="Price type">
+          <button id="payCash" aria-pressed="true">Cash price</button>
+          <button id="payCard" aria-pressed="false">Card price</button>
+        </div>
+        <div class="ratebox" id="feeBox" hidden><input id="feePct" class="small" inputmode="decimal" value="3" aria-label="Card fee percent"><i>%</i></div>
+      </div>
+      <p class="hint" id="feeHint" hidden></p>
     </div>
   </section>
 
@@ -384,12 +399,20 @@ details[open] summary::after{transform:rotate(-135deg)}
     <details id="defBox">
       <summary>Defaults</summary>
       <div class="defs">
+        <div class="field">
+          <span class="lbl">Tax rounding</span>
+          <div class="seg" role="group" aria-label="Tax rounding">
+            <button id="rCent" aria-pressed="true">To the cent</button>
+            <button id="rExact" aria-pressed="false">Exact</button>
+          </div>
+          <p class="hint" id="roundHint"></p>
+        </div>
         <p id="defNow">No defaults saved yet.</p>
         <div class="two">
           <button class="btn" id="saveDef">Save as default</button>
           <button class="btn sec" id="clearDef">Clear</button>
         </div>
-        <p class="src">Saves state, city, tax %, tip %, tip setting, amount type and split style in this browser. State rates: <a href="https://taxfoundation.org/data/all/state/2026-sales-tax-rates-midyear/" target="_blank" rel="noopener">Tax Foundation, mid-2026</a>. City rates are approximate combined general sales tax; local rates change and restaurant meal taxes can be higher, so check your receipt.</p>
+        <p class="src">Saves state, city, tax %, tip %, tip setting, amount type, split style, card price and tax rounding in this browser. State rates: <a href="https://taxfoundation.org/data/all/state/2026-sales-tax-rates-midyear/" target="_blank" rel="noopener">Tax Foundation, mid-2026</a>. City rates are approximate combined general sales tax; local rates change and restaurant meal taxes can be higher, so check your receipt.</p>
       </div>
     </details>
   </section>
@@ -435,8 +458,8 @@ function fillCities(ab,pick){const c=$("city");c.innerHTML="";
   c.value=pick&&(CITIES[ab]||[]).some(x=>x[0]===pick)?pick:"";}
 function cityRate(ab,city){const f=(CITIES[ab]||[]).find(x=>x[0]===city);return f?f[1]:stateRate(ab)}
 function place(){const c=$("city").value;return c?`${c}, ${$("state").value}`:$("state").value}
-$("state").onchange=()=>{fillCities($("state").value);$("rate").value=stateRate($("state").value);calc()};
-$("city").onchange=()=>{$("rate").value=cityRate($("state").value,$("city").value);calc()};
+$("state").onchange=()=>{if(tx.unit==="amt")setTaxUnit("pct",true);fillCities($("state").value);$("rate").value=stateRate($("state").value);calc()};
+$("city").onchange=()=>{if(tx.unit==="amt")setTaxUnit("pct",true);$("rate").value=cityRate($("state").value,$("city").value);calc()};
 function fmtCents(c){return (c/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",")}
 function setAmtCents(c){const el=$("amt");el.value=fmtCents(c);const L=el.value.length;try{el.setSelectionRange(L,L)}catch(e){}}
 $("amt").addEventListener("input",()=>{const d=$("amt").value.replace(/\D/g,"").replace(/^0+/,"").slice(0,9);setAmtCents(+d||0);calc()});
@@ -640,8 +663,35 @@ function frac(v){if(/-/.test(String(v==null?"":v)))return {n:0n,d:1n};const t=St
   return {n:BigInt((ip+fp).replace(/^0+(?=\d)/,"")||"0"),d:10n**BigInt(fp.length)}}
 // a/b rounded half-up, for a>=0, b>0
 function rq(a,b){return b>0n?(2n*a+b)/(2n*b):0n}
+// small exact-fraction toolkit for "Exact" tax rounding
+function gcd(a,b){while(b){[a,b]=[b,a%b]}return a<0n?-a:a}
+function Fr(n,d){const g=gcd(n,d)||1n;return {n:n/g,d:d/g}}
+function I(c){return {n:c,d:1n}}
+function fadd(a,b){return Fr(a.n*b.d+b.n*a.d,a.d*b.d)}
+function fmulr(a,n,d){return Fr(a.n*n,a.d*d)}
+function fc(a){return rq(a.n,a.d)}
+// tax entered as a rate (%) or as the dollar amount printed on the receipt ($)
+const tx={unit:"pct"};
+function setTaxUnit(u,quiet){tx.unit=u;const b=$("taxUnit");b.textContent=u==="pct"?"%":"$";
+  b.setAttribute("aria-label",u==="pct"?"Enter tax as a dollar amount instead":"Enter tax as a rate instead");
+  $("rate").setAttribute("aria-label",u==="pct"?"Sales tax percent":"Tax amount from receipt");
+  $("rateHint").textContent=u==="pct"?"State + local rate. Tap % to enter the tax in dollars from your receipt.":"Tax amount printed on your receipt. Tap $ to go back to a rate.";
+  if(!quiet){if(u==="amt")$("rate").value=(R&&R.tax!=null?R.tax:0).toFixed(2);else $("rate").value=cityRate($("state").value,$("city").value);calc()}}
+$("taxUnit").addEventListener("click",()=>setTaxUnit(tx.unit==="pct"?"amt":"pct"));
+// card price: a % added to the food and tax when the restaurant charges more for cards
+const pay={card:false};
+const FEE_RULES={CT:"Connecticut bans card surcharges",ME:"Maine bans card surcharges",MA:"Massachusetts bans card surcharges",CO:"Colorado caps card surcharges at 2%",IL:"Illinois caps card surcharges at 1%"};
+function setPay(card){pay.card=card;$("payCash").setAttribute("aria-pressed",!card);$("payCard").setAttribute("aria-pressed",card);
+  $("feeBox").hidden=!card;$("payRow").classList.toggle("card",card);calc()}
+$("payCash").onclick=()=>setPay(false);$("payCard").onclick=()=>setPay(true);
+$("feePct").addEventListener("input",calc);
+// tax rounding: to the cent first (like receipts) or exact (only the final total is rounded)
+st.round="cent";
+function setRound(r){st.round=r;$("rCent").setAttribute("aria-pressed",r==="cent");$("rExact").setAttribute("aria-pressed",r==="exact");
+  $("roundHint").textContent=r==="cent"?"Tax is rounded to the cent before the tip, like most receipts.":"Tax keeps every decimal and only the total is rounded, so the lines can differ from the total by 1¢.";calc()}
+$("rCent").onclick=()=>setRound("cent");$("rExact").onclick=()=>setRound("exact");
 // negative numbers aren't allowed: they count as 0, and the box is reset to 0 when you leave it
-["rate","custVal","dCustVal"].forEach(id=>$(id).addEventListener("change",()=>{const el=$(id);if(/-/.test(el.value)){el.value="0";calc()}}));
+["rate","custVal","dCustVal","feePct"].forEach(id=>$(id).addEventListener("change",()=>{const el=$(id);if(/-/.test(el.value)){el.value="0";calc()}}));
 function calc(){
   const amt=num($("amt").value), rate=num($("rate").value)/100, n=splitMode==="names"?ppl.length+1:+$("people").value;
   // Exact money math: every number typed is read as an exact fraction (BigInt numerator/denominator),
@@ -653,32 +703,47 @@ function calc(){
   if(disc.cust){const f=frac($("dCustVal").value);if(disc.unit==="amt")dFlat=rq(f.n*100n,f.d);else if(f.n>0n)P=f}
   else if(disc.p)P={n:BigInt(disc.p),d:1n};
   if(P&&P.n>100n*P.d)P={n:100n,d:1n};
-  let baseC,taxC,dC=0n,subC,origTaxC;
-  if(st.mode==="sub"){
+  // Q() rounds a fraction to whole cents, unless "Exact" tax rounding is on (then only the final total is rounded)
+  const exact=st.round==="exact"&&tx.unit==="pct", Q=f=>exact?f:I(fc(f));
+  let baseC,dC=0n,subC,taxF,origTaxF;
+  if(tx.unit==="amt"){
+    // tax typed as the dollar amount from the receipt
+    let tC=rq(rateF.n*100n,rateF.d);
+    if(st.mode==="sub"){baseC=amtC;if(dFlat>0n)dC=dFlat<baseC?dFlat:baseC;else if(P)dC=rq(baseC*P.n,100n*P.d);subC=baseC-dC}
+    else{if(tC>amtC)tC=amtC;subC=amtC-tC;
+      if(dFlat>0n){dC=dFlat;baseC=subC+dC}else if(P){baseC=P.n>=100n*P.d?subC:rq(subC*100n*P.d,100n*P.d-P.n);dC=baseC-subC}else baseC=subC}
+    taxF=I(tC);origTaxF=dC>0n&&subC>0n?I(rq(tC*baseC,subC)):I(tC);
+  }else if(st.mode==="sub"){
     // "Before tax": the amount typed is the original subtotal; the discount comes off it, then tax is charged on what's left
-    baseC=amtC;origTaxC=rq(baseC*rn,rd);
+    baseC=amtC;origTaxF=Q(Fr(baseC*rn,rd));
     if(dFlat>0n)dC=dFlat<baseC?dFlat:baseC;else if(P)dC=rq(baseC*P.n,100n*P.d);
-    subC=baseC-dC;taxC=dC>0n?rq(subC*rn,rd):origTaxC;
+    subC=baseC-dC;taxF=dC>0n?Q(Fr(subC*rn,rd)):origTaxF;
   }else{
     // "Total with tax": the amount typed is the receipt total, which already has the discount taken off.
     // Back out the receipt's tax, then rebuild the original price from the discount (used for "tip on original price").
-    subC=rq(amtC*rd,rd+rn);taxC=amtC-subC;
+    subC=rq(amtC*rd,rd+rn);taxF=I(amtC-subC);
     if(dFlat>0n){dC=dFlat;baseC=subC+dC}
     else if(P){baseC=P.n>=100n*P.d?subC:rq(subC*100n*P.d,100n*P.d-P.n);dC=baseC-subC}
     else baseC=subC;
-    origTaxC=rq(baseC*rn,rd);
+    origTaxF=Q(Fr(baseC*rn,rd));
   }
+  const taxC=fc(taxF);
   const dPct=dC>0n?(P&&dFlat===0n?Number(P.n)/Number(P.d):Number(dC)/Number(baseC)*100):0;
-  const tipBaseC=dC>0n&&disc.tipOn==="orig"?(st.tipOn==="pre"?baseC:baseC+origTaxC):(st.tipOn==="pre"?subC:subC+taxC);
-  let pct,tipC;
-  if(cust.on&&cust.unit==="amt"){const f=frac($("custVal").value);tipC=rq(f.n*100n,f.d);pct=tipBaseC>0n?Number(tipC)/Number(tipBaseC)*100:0}
-  else{const f=cust.on?frac($("custVal").value):frac($("tip").value);tipC=rq(tipBaseC*f.n,100n*f.d);pct=Number(f.n)/Number(f.d)}
+  const tbF=dC>0n&&disc.tipOn==="orig"?(st.tipOn==="pre"?I(baseC):fadd(I(baseC),origTaxF)):(st.tipOn==="pre"?I(subC):fadd(I(subC),taxF));
+  const tipBaseC=fc(tbF);
+  let pct,tipF;
+  if(cust.on&&cust.unit==="amt"){const f=frac($("custVal").value);tipF=I(rq(f.n*100n,f.d));pct=tipBaseC>0n?Number(fc(tipF))/Number(tipBaseC)*100:0}
+  else{const f=cust.on?frac($("custVal").value):frac($("tip").value);tipF=Q(fmulr(tbF,f.n,100n*f.d));pct=Number(f.n)/Number(f.d)}
   if(cust.on)$("tip").value=Math.min(40,Math.round(pct));
   const pl=+pct.toFixed(1);
-  const totalC=subC+taxC+tipC;
-  const base=Number(baseC)/100,tax=Number(taxC)/100,dAmt=Number(dC)/100,sub=Number(subC)/100,tip=Number(tipC)/100,total=Number(totalC)/100,tipBaseN=Number(tipBaseC);
+  // card price: fee % on the food and tax (not the tip)
+  let feeF=I(0n),feePct=0;
+  if(pay.card){let f=frac($("feePct").value);if(f.n>100n*f.d)f={n:100n,d:1n};feePct=Number(f.n)/Number(f.d);feeF=Q(fmulr(fadd(I(subC),taxF),f.n,100n*f.d))}
+  const tipC=fc(tipF),feeC=fc(feeF);
+  const totalC=fc(fadd(fadd(fadd(I(subC),taxF),feeF),tipF));
+  const base=Number(baseC)/100,tax=Number(taxC)/100,dAmt=Number(dC)/100,sub=Number(subC)/100,tip=Number(tipC)/100,fee=Number(feeC)/100,total=Number(totalC)/100,tipBaseN=Number(tipBaseC);
   const cents=Math.round(total*100), each=Math.floor(cents/n), extra=cents-each*n;
-  R={amt,base,sub,dAmt,dPct:+dPct.toFixed(1),tax,tip,total,pct:pl,n,rate:/-/.test($("rate").value)?0:num($("rate").value),ab:place(),each:each/100,extra};
+  R={amt,base,sub,dAmt,dPct:+dPct.toFixed(1),tax,tip,total,pct:pl,n,rate:tx.unit==="amt"?(subC>0n?+(Number(taxC)/Number(subC)*100).toFixed(3):0):(/-/.test($("rate").value)?0:num($("rate").value)),ab:place(),each:each/100,extra,fee,feePct,taxUnit:tx.unit,exact};
   R.names=splitMode==="names"&&ppl.length>0;
   R.alloc=R.names?alloc():null;
   R.paying=R.names?Object.keys(R.alloc).length:(splitMode==="count"&&covOn?Math.min(+$("paying").value||n,n):n);
@@ -687,7 +752,7 @@ function calc(){
   document.querySelectorAll("#chips button").forEach(b=>b.setAttribute("aria-pressed",b.id==="custBtn"?cust.on:(!cust.on&&+b.dataset.p===pl)));
   $("pill").textContent=`${R.ab} · ${n===1?"1 person":n+" people"}`;
   $("check").querySelector(".break").classList.toggle("wide",fmt(total).length>8);$("oBase").textContent=fmt(sub);$("oBase").previousElementSibling.textContent=dAmt>0?(disc.cust&&disc.unit==="amt"?`Base −${fmt(dAmt)}`:`Base −${R.dPct}%`):"Base";$("oTax").textContent=fmt(tax);$("oTip").textContent=fmt(tip);$("oTotal").textContent=fmt(total);
-  $("oRate").textContent=`Tax ${R.rate}%`;$("oTipPct").textContent=`Tip ${pl}%`;
+  $("oRate").textContent=tx.unit==="amt"?"Tax (receipt)":`Tax ${R.rate}%`;$("oTipPct").textContent=`Tip ${pl}%`;
   $("perLbl").textContent=n===1?"You pay":"Per person";
   {const v=fmt(extra?(each+1)/100:each/100).slice(1);$("oPer").innerHTML="<small>$</small>"+v;}
   renderPeople();
@@ -696,31 +761,35 @@ function calc(){
   $("dTipSeg").hidden=!(dAmt>0);$("dHint").hidden=!(dAmt>0);
   const tbTxt=disc.tipOn==="orig"?(st.tipOn==="pre"?"the price before the discount":"the price before the discount, plus its tax"):(st.tipOn==="pre"?"the discounted price":"the discounted price, plus tax");
   $("dHint").textContent=`Tip is ${pl}% of ${fmt(tipBaseN/100)}, ${tbTxt}.`+(disc.tipOn==="orig"?" Your server isn't tipped less because of the discount.":"")+(st.mode==="tot"?" The total you entered is treated as already discounted.":"");
+  if(pay.card){const rule=FEE_RULES[$("state").value];
+    $("feeHint").textContent=`Card price adds ${feePct}% (${fmt(fee)}) to the food and tax. The tip isn't affected.`+(rule?` Note: ${rule}; cash-discount pricing is still allowed.`:"")}
+  $("feeHint").hidden=!pay.card;
   let cnote="";
   if(R.paying<n&&!R.names){const parts=[`Just yourself: ${fmt(R.forK(1))}`];for(let k=2;k<=Math.min(n-R.paying+1,4);k++)parts.push(`for ${k} people: ${fmt(R.forK(k))}`);
     cnote=parts.join(" · ")}
   $("covNote").hidden=!cnote;$("covNote").textContent=cnote;
   const note=extra&&!(R.paying<n)&&!R.names?`${extra} pay ${fmt((each+1)/100)}, ${n-extra} pay ${fmt(each/100)} so the cents add up.`:"";
-  const fullNote=[dAmt>0?`Includes ${fmt(dAmt)} off (${R.dPct}%), from ${fmt(base)}. Tip is ${pl}% of ${fmt(tipBaseN/100)}.`:"",note].filter(Boolean).join(" ");
+  const parts=Number(subC+taxC+tipC+feeC)!==Number(totalC)?"The lines can differ from the total by 1¢ because only the total is rounded.":"";
+  const fullNote=[fee>0?`Includes ${fmt(fee)} card fee (${feePct}%).`:"",dAmt>0?`Includes ${fmt(dAmt)} off (${R.dPct}%), from ${fmt(base)}. Tip is ${pl}% of ${fmt(tipBaseN/100)}.`:"",note].filter(Boolean).concat(parts?[parts]:[]).join(" ");
   $("oNote").hidden=!fullNote;$("oNote").textContent=fullNote;
   if(typeof scheduleHistory==="function"&&histReady)scheduleHistory();
 }
 
 function applyDefaults(){
   const d=loadDef();
-  if(d){$("state").value=d.state;fillCities(d.state,d.city);$("rate").value=d.rate;if(PRESETS.includes(+d.tip)){setCustom(false);$("tip").value=d.tip}else{setCustom(true);setUnitQuiet("pct");$("custVal").value=d.tip}st.tipOn=d.tipOn||"post";st.mode=d.mode||"sub";splitMode=d.split||"count";
-    $("defNow").textContent=`${d.city?d.city+", ":""}${STATES.find(s=>s[0]===d.state)[1]}, ${d.rate}% tax, ${d.tip}% tip ${d.tipOn==="pre"?"without":"with"} tax, amount entered as ${d.mode==="tot"?"total with tax":"before tax"}.`}
-  else{splitMode="count";st.mode="sub";st.tipOn="post";$("state").value="NY";fillCities("NY","New York City");$("rate").value=cityRate("NY","New York City");setCustom(false);$("tip").value=20;$("defNow").textContent="No defaults saved yet."}
-  setTipOn(st.tipOn);setMode(st.mode);setSplit(splitMode);
+  if(d){$("state").value=d.state;fillCities(d.state,d.city);$("rate").value=d.rate;if(PRESETS.includes(+d.tip)){setCustom(false);$("tip").value=d.tip}else{setCustom(true);setUnitQuiet("pct");$("custVal").value=d.tip}st.tipOn=d.tipOn||"post";st.mode=d.mode||"sub";splitMode=d.split||"count";pay.card=!!d.card;$("feePct").value=d.fee!=null?d.fee:3;st.round=d.round||"cent";
+    $("defNow").textContent=`${d.city?d.city+", ":""}${STATES.find(s=>s[0]===d.state)[1]}, ${d.rate}% tax, ${d.tip}% tip ${d.tipOn==="pre"?"without":"with"} tax, amount entered as ${d.mode==="tot"?"total with tax":"before tax"}${d.card?`, card price +${d.fee}%`:""}${d.round==="exact"?", exact tax":""}.`}
+  else{splitMode="count";st.mode="sub";st.tipOn="post";pay.card=false;$("feePct").value=3;st.round="cent";$("state").value="NY";fillCities("NY","New York City");$("rate").value=cityRate("NY","New York City");setCustom(false);$("tip").value=20;$("defNow").textContent="No defaults saved yet."}
+  setTaxUnit("pct",true);setTipOn(st.tipOn);setMode(st.mode);setSplit(splitMode);setPay(pay.card);setRound(st.round);
 }
-$("saveDef").onclick=()=>{const ok=saveDefStore({state:$("state").value,city:$("city").value,rate:R.rate,tip:R.pct,tipOn:st.tipOn,mode:st.mode,split:splitMode});
+$("saveDef").onclick=()=>{const ok=saveDefStore({state:$("state").value,city:$("city").value,rate:tx.unit==="amt"?cityRate($("state").value,$("city").value):R.rate,tip:R.pct,tipOn:st.tipOn,mode:st.mode,split:splitMode,card:pay.card,fee:num($("feePct").value),round:st.round});
   applyDefaults();toast(ok?"Defaults saved":"This browser blocked saving, so defaults won't stick here.")};
 $("clearDef").onclick=()=>{saveDefStore(null);applyDefaults();toast("Defaults cleared")};
 
 let tt;function toast(m){$("toast").textContent=m;clearTimeout(tt);tt=setTimeout(()=>$("toast").textContent="",3500)}
 
 function summary(){
-  const lines=[`Bill split (${R.ab})`,...(R.dAmt>0?[`Subtotal: ${fmt(R.base)}`,`Discount ${R.dPct}%: −${fmt(R.dAmt)}`]:[`Base: ${fmt(R.base)}`]),`Tax ${R.rate}%: ${fmt(R.tax)}`,`Tip ${R.pct}%: ${fmt(R.tip)}`,`Total: ${fmt(R.total)}`];
+  const lines=[`Bill split (${R.ab})`,...(R.dAmt>0?[`Subtotal: ${fmt(R.base)}`,`Discount ${R.dPct}%: −${fmt(R.dAmt)}`]:[`Base: ${fmt(R.base)}`]),`Tax ${R.rate}%: ${fmt(R.tax)}`,...(R.fee>0?[`Card fee ${R.feePct}%: ${fmt(R.fee)}`]:[]),`Tip ${R.pct}%: ${fmt(R.tip)}`,`Total: ${fmt(R.total)}`];
   if(R.names){lines.push("");members().filter(m=>!m.by).forEach(m=>{const cv=coveredBy(m.key);
     lines.push(`${m.me?"Me":m.name}${cv.length?" (+ "+cv.map(c=>c.me?"me":c.name).join(", ")+")":""}: ${fmt(amtFor(m.key))}`)})}
   else if(R.paying<R.n){lines.push(`${R.n} people, ${R.paying} paying: ${fmt(R.forK(1))} per person`);for(let k=2;k<=Math.min(R.n-R.paying+1,4);k++)lines.push(`Covering ${k-1} other${k>2?"s":""}: ${fmt(R.forK(k))}`)}
@@ -731,7 +800,7 @@ function summary(){
 function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
 function drawPNG(){
   return new Promise(res=>{
-    const s=3,W=380,PAY=R.names?members().filter(m=>!m.by):[],PL=PAY.length,XN=R.extra&&!R.names,H=(XN?318:296)+(PL?PL*24+30:0)+(R.dAmt>0?24:0);
+    const s=3,W=380,PAY=R.names?members().filter(m=>!m.by):[],PL=PAY.length,XN=R.extra&&!R.names,H=(XN?318:296)+(PL?PL*24+30:0)+(R.dAmt>0?24:0)+(R.fee>0?24:0);
     const c=document.createElement("canvas");c.width=W*s;c.height=H*s;const g=c.getContext("2d");g.scale(s,s);
     const mono='"IBM Plex Sans", system-ui, sans-serif', sans=mono;
     g.fillStyle="#f2f4f7";g.fillRect(0,0,W,H);
@@ -744,7 +813,7 @@ function drawPNG(){
     let y=124;
     if(XN){y+=20;g.font=`400 11px ${sans}`;g.fillText(`${R.extra} pay ${fmt(R.each+.01)}, ${R.n-R.extra} pay ${fmt(R.each)}`,L,y)}
     y+=22;g.fillStyle="rgba(255,255,255,.12)";g.fillRect(L,y,Rx-L,1);y+=28;
-    [...(R.dAmt>0?[["Subtotal",fmt(R.base)],[`Discount ${R.dPct}%`,"−"+fmt(R.dAmt)]]:[["Base",fmt(R.base)]]),[`Tax ${R.rate}%`,fmt(R.tax)],[`Tip ${R.pct}%`,fmt(R.tip)]].forEach(([a,b])=>{
+    [...(R.dAmt>0?[["Subtotal",fmt(R.base)],[`Discount ${R.dPct}%`,"−"+fmt(R.dAmt)]]:[["Base",fmt(R.base)]]),[`Tax ${R.rate}%`,fmt(R.tax)],...(R.fee>0?[[`Card fee ${R.feePct}%`,fmt(R.fee)]]:[]),[`Tip ${R.pct}%`,fmt(R.tip)]].forEach(([a,b])=>{
       g.fillStyle="#a9b6c8";g.font=`400 13px ${sans}`;g.fillText(a,L,y);
       g.fillStyle="#f5f6f9";g.font=`500 13px ${mono}`;g.textAlign="right";g.fillText(b,Rx,y);g.textAlign="left";y+=24});
     y+=4;g.fillStyle="rgba(255,255,255,.12)";g.fillRect(L,y-14,Rx-L,1);y+=6;
@@ -792,7 +861,7 @@ let hist=[];try{hist=JSON.parse(localStorage.getItem(HKEY)||"[]")}catch(e){}
 let hCur=null,hOpen=null,hClearArm=0;
 function saveHistStore(){try{localStorage.setItem(HKEY,JSON.stringify(hist));return true}catch(e){return false}}
 function snapshot(){
-  const e={ts:Date.now(),place:R.ab,total:R.total,base:R.base,sub:R.sub,dAmt:R.dAmt,dPct:R.dPct,tax:R.tax,rate:R.rate,tip:R.tip,pct:R.pct,n:R.n};
+  const e={ts:Date.now(),place:R.ab,total:R.total,base:R.base,sub:R.sub,dAmt:R.dAmt,dPct:R.dPct,tax:R.tax,rate:R.rate,tip:R.tip,pct:R.pct,n:R.n,fee:R.fee,feePct:R.feePct};
   if(R.names){e.people=members().filter(m=>!m.by).map(m=>({name:m.me?"You":m.name,amt:amtFor(m.key),covers:coveredBy(m.key).map(c=>c.me?"You":c.name)}));
     e.all=members().map(m=>m.me?"You":m.name)}
   else{e.each=R.forK(1);e.paying=R.paying}
@@ -902,7 +971,7 @@ function billLine(e,who){const d=new Date(e.ts),df=new Intl.DateTimeFormat(undef
   else if(e.people)t+=" · "+e.people.map(p=>`${p.name} ${fmt(p.amt)}`).join(", ");else t+=` · ${fmt(e.each)} each`;return t}
 function billText(e,who){const lines=[`Bill from ${new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",year:"numeric"}).format(new Date(e.ts))} · ${e.place}`];
   if(e.dAmt>0){lines.push(`Subtotal: ${fmt(e.base)}`,`Discount ${e.dPct}%: −${fmt(e.dAmt)}`)}else lines.push(`Base: ${fmt(e.base)}`);
-  lines.push(`Tax ${e.rate}%: ${fmt(e.tax)}`,`Tip ${e.pct}%: ${fmt(e.tip)}`,`Total: ${fmt(e.total)}`,"");
+  lines.push(`Tax ${e.rate}%: ${fmt(e.tax)}`,...(e.fee>0?[`Card fee ${e.feePct}%: ${fmt(e.fee)}`]:[]),`Tip ${e.pct}%: ${fmt(e.tip)}`,`Total: ${fmt(e.total)}`,"");
   if(e.people)e.people.forEach(p=>lines.push(`${p.name}${p.covers.length?" (+ "+p.covers.join(", ")+")":""}: ${fmt(p.amt)}`));else lines.push(`Split ${e.n} ways: ${fmt(e.each)} each`);
   return lines.join("\n")}
 function historyText(){const who=hWho,list=hist.filter(e=>hDateOk(e.ts)&&(!who||personIn(e,who)));
