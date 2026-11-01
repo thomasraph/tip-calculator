@@ -1,5 +1,24 @@
 # Release Notes
 
+## Version: 1.0.6
+### Date: November 1, 2026
+
+Four fixes from a bug report on history, texting and defaults. Each one was reproduced on 1.0.5 before being fixed.
+
+## History fixes
+- **Identical bills both saved:** clearing the amount to 0.00 starts a new bill, and the new bill now always gets its own History entry even if it matches the last one. Before, a second $10 bill after a first $10 bill was dropped, so History showed $10 instead of $20. The same goes for the first bill after reopening the app. Saving an unchanged bill twice without clearing still adds nothing.
+- **Changes at the same total are saved:** editing a bill now updates History whenever any line changes, not only when the total or split changes. Before, changing $0 tax / $20 tip to $20 tax / $0 tip on a $100 bill (both $120) kept the old breakdown.
+
+## Texting fix
+- **New bill, fresh texts:** clearing the amount to start a new bill now clears the "✓ Texted" marks. Before, an identical new bill showed Alex as already texted, and Text everyone skipped them.
+
+## Defaults fix
+- **Saving defaults leaves the current bill alone:** a tip typed in dollars now saves its exact percent ($174.50 on $1,000 saves 17.45%, not 17.5%), and the current bill keeps its $174.50 tip and $1,174.50 total. Before, saving switched the bill to the rounded percent and changed it to $175.00. Tax typed in dollars from a receipt also stays as typed.
+
+## Testing
+- **Full regression before release:** 226,000+ random bills against the independent reference calculator (zero mismatches), 2,496 rounding cases, the 141-check feature suite, 235 start-to-finish scenario checks across four scenario packs (including 39 new checks for these four bugs, which fail on 1.0.5 and pass now), and the three real receipts, all passing on the exact version pushed.
+- **Offline cache bumped to v11.**
+
 ## Version: 1.0.5
 ### Date: November 1, 2026
 
