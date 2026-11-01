@@ -1,5 +1,24 @@
 # Release Notes
 
+## Version: 1.0.5
+### Date: November 1, 2026
+
+History now shows uneven splits the way the main screen does, saved tips stay exactly as typed, and the offline copy of the app is harder to break.
+
+## History fixes
+- **Uneven splits shown in full:** when a bill doesn't divide evenly, History now lists both amounts, for example "1 × $6.54, 1 × $6.53" for $13.07 split 2 ways. Before, it showed one "each" amount that was a cent off for some people. This applies to the list, opened bills, Share this bill and the shared history. Bills saved before this update still show their single amount.
+- **Card fee and cash rounding in opened bills:** tapping a bill now shows the Card fee and Cash rounding rows. Shared text already had them, but the expanded view didn't.
+- **Fits small phones:** on narrow screens (320px), the two amounts wrap neatly onto two lines instead of squeezing the date and number of people.
+
+## Defaults fix
+- **Exact saved tip:** Save Defaults now keeps the tip exactly as typed, so 17.45% stays 17.45% (it was saved as 17.5%). A tip typed in dollars saves its percent equivalent, as before.
+
+## Offline reliability
+- **Only good pages are saved for offline use:** the app no longer stores a failed load (like a "not found" page) over its working offline copy. Offline cache bumped to v10.
+
+## Testing
+- **Full regression before release:** 226,000+ random bills against the independent reference calculator (zero mismatches), 2,496 rounding cases, the 141-check feature suite, 196 start-to-finish scenario checks across three scenario packs (including 68 new checks for this release), and the three real receipts, all passing on the exact version pushed.
+
 ## Version: 1.0.4
 ### Date: October 25, 2026
 

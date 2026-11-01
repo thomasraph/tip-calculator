@@ -206,12 +206,12 @@ details[open] summary::after{transform:rotate(-135deg)}
 .hlist{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .hlist:empty{display:none}
 .hlist>li+li{border-top:1px solid var(--line)}
-.hrow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;padding:11px 12px;cursor:pointer}
+.hrow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(40%,1fr) auto;gap:2px 12px;width:100%;padding:11px 12px;cursor:pointer}
 .hrow:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .hrow .hd{font-size:.76rem;color:var(--muted)}
 .hrow .ht{font-weight:600;font-size:.95rem;text-align:right}
 .hrow .hp{font-size:.88rem;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hrow .hx{font-size:.76rem;color:var(--muted);text-align:right;white-space:nowrap}
+.hrow .hx{font-size:.76rem;color:var(--muted);text-align:right}
 .hrow .hme{grid-column:1/-1;font-size:.8rem;color:var(--pos);font-weight:600}
 .hdet{padding:2px 12px 12px;display:grid;gap:5px;font-size:.84rem;background:var(--surface-2)}
 .hdet .r{display:flex;justify-content:space-between;gap:12px}
@@ -901,6 +901,8 @@ function hDateOk(ts){const v=$("hDate").value,d=new Date(ts),now=new Date();
   return true}
 // per-person text for a count-split bill: uneven splits list both amounts, the way the screen does
 function eachText(e){return e.extra?`${e.extra} × ${fmt(Math.round(e.each*100+1)/100)}, ${e.n-e.extra} × ${fmt(e.each)}`:`${fmt(e.each)} each`}
+// on screen, keep "2 × $5.01" together so a narrow phone wraps only after the comma
+function eachUI(e){return eachText(e).replace(/ × /g,"\u00a0×\u00a0").replace(/ each$/,"\u00a0each")}
 function personIn(e,name){return (e.all||[]).includes(name)}
 function personAmt(e,name){if(!e.people)return null;const p=e.people.find(x=>x.name===name);if(p)return {amt:p.amt,covers:p.covers};
   const c=e.people.find(x=>x.covers.includes(name));return c?{coveredBy:c.name}:null}
@@ -951,7 +953,7 @@ function renderHist(){
     const ppl=e.all?e.all.filter(n=>n!=="You"):[];
     b.append(mk("hd",`${df.format(d)} · ${tf.format(d)} · ${e.place}`),mk("ht",fmt(e.total)),
       mk("hp",e.people?(ppl.length?"With "+ppl.join(", "):"Just you"):`${e.n} ${e.n===1?"person":"people"}`),
-      mk("hx",e.people?`${e.n} people`:eachText(e)));
+      mk("hx",e.people?`${e.n} people`:eachUI(e)));
     if(who){const pa=personAmt(e,who);b.appendChild(mk("hme",pa?(pa.amt!=null?`${who} paid ${fmt(pa.amt)}${pa.covers.length?" (+ "+pa.covers.join(", ")+")":""}`:`${who} was covered by ${pa.coveredBy}`):""))}
     b.onclick=()=>{hOpen=hOpen===e.id?null:e.id;renderHist()};
     const top=document.createElement("div");top.className="hitem";top.appendChild(b);
@@ -963,7 +965,7 @@ function renderHist(){
       row(`Tax ${e.rate}%`,fmt(e.tax));if(e.fee>0)row(`Card fee ${e.feePct}%`,fmt(e.fee));row(`Tip ${e.pct}%`,fmt(e.tip));
       if(e.cashRound)row("Cash rounding",(e.cashRound<0?"−":"+")+fmt(Math.abs(e.cashRound)));row("Total",fmt(e.total));
       if(e.people){e.people.forEach((p,i)=>row(p.name+(p.covers.length?" (+ "+p.covers.join(", ")+")":""),fmt(p.amt),i===0?"sep":""))}
-      else row(`Split ${e.n} ways`,eachText(e),"sep");
+      else row(`Split ${e.n} ways`,eachUI(e),"sep");
       const del=document.createElement("button");del.className="hdel";del.type="button";del.textContent="Delete this bill";
       del.onclick=()=>deleteBill(e.id);
       const sh=document.createElement("button");sh.className="hdel hsh";sh.type="button";sh.textContent="Share this bill";sh.onclick=()=>shareText(billText(e,who),"Bill");
