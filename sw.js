@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tip-splitter-v8';
+const CACHE_NAME = 'tip-splitter-v9';
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -19,6 +19,15 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Only successful responses go into the cache, so a 404 or server error never replaces a good copy.
+function keep(request, response) {
+  if (response && response.ok) {
+    const copy = response.clone();
+    caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+  }
+  return response;
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
@@ -29,11 +38,7 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          return response;
-        })
+        .then((response) => keep(request, response))
         .catch(() => caches.match('./index.html'))
     );
     return;
@@ -46,11 +51,7 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          return response;
-        })
+        .then((response) => keep(request, response))
         .catch(() => caches.match('./icon.svg'));
     })
   );

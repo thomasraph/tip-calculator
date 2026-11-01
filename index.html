@@ -797,7 +797,9 @@ function applyDefaults(){
   else{splitMode="count";st.mode="sub";st.tipOn="post";pay.card=false;$("feePct").value=3;pay.feeOn="bill";pay.round5=false;st.round="cent";$("state").value="NY";fillCities("NY","New York City");$("rate").value=cityRate("NY","New York City");setCustom(false);$("tip").value=20;$("defNow").textContent="No defaults saved yet."}
   setTaxUnit("pct",true);setTipOn(st.tipOn);setMode(st.mode);setSplit(splitMode);$("cashRound").checked=pay.round5;$("feeBill").setAttribute("aria-pressed",pay.feeOn==="bill");$("feeAll").setAttribute("aria-pressed",pay.feeOn==="all");setPay(pay.card);setRound(st.round);
 }
-$("saveDef").onclick=()=>{const ok=saveDefStore({state:$("state").value,city:$("city").value,rate:tx.unit==="amt"?cityRate($("state").value,$("city").value):R.rate,tip:R.pct,tipOn:st.tipOn,mode:st.mode,split:splitMode,card:pay.card,fee:num($("feePct").value),feeOn:pay.feeOn,round5:pay.round5,round:st.round});
+// the tip % to save: exactly what was typed (17.45 stays 17.45), not the rounded label; a tip typed in dollars saves its % equivalent
+function tipToSave(){if(cust.on&&cust.unit==="amt")return R.pct;const f=frac(cust.on?$("custVal").value:$("tip").value);return Number(f.n)/Number(f.d)}
+$("saveDef").onclick=()=>{const ok=saveDefStore({state:$("state").value,city:$("city").value,rate:tx.unit==="amt"?cityRate($("state").value,$("city").value):R.rate,tip:tipToSave(),tipOn:st.tipOn,mode:st.mode,split:splitMode,card:pay.card,fee:num($("feePct").value),feeOn:pay.feeOn,round5:pay.round5,round:st.round});
   applyDefaults();toast(ok?"Defaults saved":"This browser blocked saving, so defaults won't stick here.")};
 $("clearDef").onclick=()=>{saveDefStore(null);applyDefaults();toast("Defaults cleared")};
 
@@ -879,7 +881,8 @@ function snapshot(){
   const e={ts:Date.now(),place:R.ab,total:R.total,base:R.base,sub:R.sub,dAmt:R.dAmt,dPct:R.dPct,tax:R.tax,rate:R.rate,tip:R.tip,pct:R.pct,n:R.n,fee:R.fee,feePct:R.feePct,cashRound:R.cashRound};
   if(R.names){e.people=members().filter(m=>!m.by).map(m=>({name:m.me?"You":m.name,amt:amtFor(m.key),covers:coveredBy(m.key).map(c=>c.me?"You":c.name)}));
     e.all=members().map(m=>m.me?"You":m.name)}
-  else{e.each=R.forK(1);e.paying=R.paying}
+  else if(R.paying<R.n){e.each=R.forK(1);e.paying=R.paying}
+  else{e.each=R.each;e.extra=R.extra;e.paying=R.paying}
   e.sig=JSON.stringify([e.total,e.n,e.people||e.each]);return e}
 function recordHistory(quiet){
   if(!(R.total>0)){if(!quiet)toast("Enter a bill amount first.");return}
@@ -896,6 +899,8 @@ function hDateOk(ts){const v=$("hDate").value,d=new Date(ts),now=new Date();
   if(v==="month")return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
   if(v==="pick"){const pv=$("hPick").value;if(!pv)return true;const [y,mo,da]=pv.split("-").map(Number);return d.getFullYear()===y&&d.getMonth()===mo-1&&d.getDate()===da}
   return true}
+// per-person text for a count-split bill: uneven splits list both amounts, the way the screen does
+function eachText(e){return e.extra?`${e.extra} × ${fmt(Math.round(e.each*100+1)/100)}, ${e.n-e.extra} × ${fmt(e.each)}`:`${fmt(e.each)} each`}
 function personIn(e,name){return (e.all||[]).includes(name)}
 function personAmt(e,name){if(!e.people)return null;const p=e.people.find(x=>x.name===name);if(p)return {amt:p.amt,covers:p.covers};
   const c=e.people.find(x=>x.covers.includes(name));return c?{coveredBy:c.name}:null}
@@ -946,7 +951,7 @@ function renderHist(){
     const ppl=e.all?e.all.filter(n=>n!=="You"):[];
     b.append(mk("hd",`${df.format(d)} · ${tf.format(d)} · ${e.place}`),mk("ht",fmt(e.total)),
       mk("hp",e.people?(ppl.length?"With "+ppl.join(", "):"Just you"):`${e.n} ${e.n===1?"person":"people"}`),
-      mk("hx",e.people?`${e.n} people`:`${fmt(e.each)} each`));
+      mk("hx",e.people?`${e.n} people`:eachText(e)));
     if(who){const pa=personAmt(e,who);b.appendChild(mk("hme",pa?(pa.amt!=null?`${who} paid ${fmt(pa.amt)}${pa.covers.length?" (+ "+pa.covers.join(", ")+")":""}`:`${who} was covered by ${pa.coveredBy}`):""))}
     b.onclick=()=>{hOpen=hOpen===e.id?null:e.id;renderHist()};
     const top=document.createElement("div");top.className="hitem";top.appendChild(b);
@@ -955,9 +960,10 @@ function renderHist(){
     li.appendChild(top);
     if(hOpen===e.id){const dt=document.createElement("div");dt.className="hdet";const row=(a,v,c)=>{const r=document.createElement("div");r.className="r"+(c?" "+c:"");const s1=document.createElement("span");s1.textContent=a;const s2=document.createElement("b");s2.textContent=v;r.append(s1,s2);dt.appendChild(r)};
       if(e.dAmt>0){row("Subtotal",fmt(e.base));row(`Discount ${e.dPct}%`,"−"+fmt(e.dAmt))}else row("Base",fmt(e.base));
-      row(`Tax ${e.rate}%`,fmt(e.tax));row(`Tip ${e.pct}%`,fmt(e.tip));row("Total",fmt(e.total));
+      row(`Tax ${e.rate}%`,fmt(e.tax));if(e.fee>0)row(`Card fee ${e.feePct}%`,fmt(e.fee));row(`Tip ${e.pct}%`,fmt(e.tip));
+      if(e.cashRound)row("Cash rounding",(e.cashRound<0?"−":"+")+fmt(Math.abs(e.cashRound)));row("Total",fmt(e.total));
       if(e.people){e.people.forEach((p,i)=>row(p.name+(p.covers.length?" (+ "+p.covers.join(", ")+")":""),fmt(p.amt),i===0?"sep":""))}
-      else row(`Split ${e.n} ways`,`${fmt(e.each)} each`,"sep");
+      else row(`Split ${e.n} ways`,eachText(e),"sep");
       const del=document.createElement("button");del.className="hdel";del.type="button";del.textContent="Delete this bill";
       del.onclick=()=>deleteBill(e.id);
       const sh=document.createElement("button");sh.className="hdel hsh";sh.type="button";sh.textContent="Share this bill";sh.onclick=()=>shareText(billText(e,who),"Bill");
@@ -983,11 +989,11 @@ $("hDate").addEventListener("change",()=>{hShown=5;renderHist()});$("hPick").add
 function billLine(e,who){const d=new Date(e.ts),df=new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric"});
   let t=`${df.format(d)} · ${e.place} · ${fmt(e.total)} (${e.n} ${e.n===1?"person":"people"})`;
   if(who){const pa=personAmt(e,who);if(pa)t+=pa.amt!=null?` · ${who} paid ${fmt(pa.amt)}${pa.covers.length?" (+ "+pa.covers.join(", ")+")":""}`:` · ${who} covered by ${pa.coveredBy}`}
-  else if(e.people)t+=" · "+e.people.map(p=>`${p.name} ${fmt(p.amt)}`).join(", ");else t+=` · ${fmt(e.each)} each`;return t}
+  else if(e.people)t+=" · "+e.people.map(p=>`${p.name} ${fmt(p.amt)}`).join(", ");else t+=` · ${eachText(e)}`;return t}
 function billText(e,who){const lines=[`Bill from ${new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",year:"numeric"}).format(new Date(e.ts))} · ${e.place}`];
   if(e.dAmt>0){lines.push(`Subtotal: ${fmt(e.base)}`,`Discount ${e.dPct}%: −${fmt(e.dAmt)}`)}else lines.push(`Base: ${fmt(e.base)}`);
   lines.push(`Tax ${e.rate}%: ${fmt(e.tax)}`,...(e.fee>0?[`Card fee ${e.feePct}%: ${fmt(e.fee)}`]:[]),`Tip ${e.pct}%: ${fmt(e.tip)}`,...(e.cashRound?[`Cash rounding: ${e.cashRound<0?"−":"+"}${fmt(Math.abs(e.cashRound))}`]:[]),`Total: ${fmt(e.total)}`,"");
-  if(e.people)e.people.forEach(p=>lines.push(`${p.name}${p.covers.length?" (+ "+p.covers.join(", ")+")":""}: ${fmt(p.amt)}`));else lines.push(`Split ${e.n} ways: ${fmt(e.each)} each`);
+  if(e.people)e.people.forEach(p=>lines.push(`${p.name}${p.covers.length?" (+ "+p.covers.join(", ")+")":""}: ${fmt(p.amt)}`));else lines.push(`Split ${e.n} ways: ${eachText(e)}`);
   return lines.join("\n")}
 function historyText(){const who=hWho,list=hist.filter(e=>hDateOk(e.ts)&&(!who||personIn(e,who)));
   const dl=$("hDate").selectedOptions[0].textContent,range=$("hDate").value==="all"?"":($("hDate").value==="pick"&&$("hPick").value?` · ${$("hPick").value}`:` · ${dl}`);
